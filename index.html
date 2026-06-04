@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patriot Riders WI-1 Calendar</title>
     
-    <!-- PWA Capabilities -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="PR Logo_2.jpg">
 
-    <!-- Firebase Core App and Database SDKs (v9 Compatible Libraries) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -73,14 +71,16 @@
         .btn-blue:hover { background-color: #14532d; }
         .btn-slate { background-color: #475569; color: #ffffff; }
         .btn-slate:hover { background-color: #334155; }
+        .btn-amber { background-color: #d97706; color: #ffffff; border-color: #b45309; }
+        .btn-amber:hover { background-color: #b45309; }
         .btn-dark { background-color: #1b2e1a; color: #fef08a; padding: 0.625rem 1.5rem; font-size: 1rem; border: 1px solid #3f6212; }
         .btn-dark:hover { background-color: #3f6212; color: #ffffff; }
         .btn-edit { background-color: #fef9c3; color: #854d0e; border: 1px solid #fef08a; font-size: 0.75rem; padding: 0.5rem 0.875rem; }
         .btn-edit:hover { background-color: #fef08a; }
         .btn-delete { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; font-size: 0.75rem; padding: 0.5rem 0.875rem; }
         .btn-delete:hover { background-color: #fca5a5; }
-        .btn-dl-pdf { background-color: #991b1b; color: #ffffff; font-size: 0.75rem; padding: 0.625rem 1rem; }
-        .btn-dl-img { background-color: #3f6212; color: #ffffff; font-size: 0.75rem; padding: 0.625rem 1rem; }
+        .btn-dl-pdf { background-color: #991b1b; color: #ffffff; font-size: 0.75rem; padding: 0.625rem 1rem; text-decoration: none; border-radius: 0.25rem; font-weight: bold; }
+        .btn-dl-img { background-color: #3f6212; color: #ffffff; font-size: 0.75rem; padding: 0.625rem 1rem; text-decoration: none; border-radius: 0.25rem; font-weight: bold; }
 
         /* LAYOUT CORE SPLIT SYSTEM */
         .layout-grid { display: grid; grid-template-columns: 1fr; gap: 2rem; margin-top: 1.5rem; }
@@ -201,7 +201,6 @@
 
     <div class="max-container">
         
-        <!-- Host Dashboard Form Panel -->
         <div id="host-panel" class="panel hidden">
             <div class="panel-header">
                 <h2 id="form-heading" class="panel-title">🛠️ Log Mission/Event <span class="badge-active">Ready</span></h2>
@@ -296,13 +295,13 @@
         // 🔒 FIREBASE INTEGRATION ENGINE
         // ==========================================
         const firebaseConfig = {
-  apiKey: "AIzaSyCniExkOprcUUTtid1QzVUTNRm36E78Uso",
-  authDomain: "pr-wi-chapter-1-calendar.firebaseapp.com",
-  projectId: "pr-wi-chapter-1-calendar",
-  storageBucket: "pr-wi-chapter-1-calendar.firebasestorage.app",
-  messagingSenderId: "810452049591",
-  appId: "1:810452049591:web:eb62d74074928e6a443732"
-};
+            apiKey: "AIzaSyCniExkOprcUUTtid1QzVUTNRm36E78Uso",
+            authDomain: "pr-wi-chapter-1-calendar.firebaseapp.com",
+            projectId: "pr-wi-chapter-1-calendar",
+            storageBucket: "pr-wi-chapter-1-calendar.firebasestorage.app",
+            messagingSenderId: "810452049591",
+            appId: "1:810452049591:web:eb62d74074928e6a443732"
+        };
         
         // Change this string to set your custom Host Admin access password
         const SECRET_HOST_PASSWORD = "Veteran123"; 
@@ -519,13 +518,79 @@
         }
 
         function filterByDate(isoString) {
-            activeDateFilter = isoString;
+            // Act as a toggle switch: click a selected day again to un-filter everything
+            if (activeDateFilter === isoString) {
+                activeDateFilter = null;
+            } else {
+                activeDateFilter = isoString;
+            }
             safelyRenderAll();
         }
 
         function clearDateFilter() {
             activeDateFilter = null;
             safelyRenderAll();
+        }
+
+        function buildEventCardMarkup(e, isPast) {
+            let adminButtons = '';
+            if (isAdmin) {
+                adminButtons = `
+                    <div class="admin-actions">
+                        <button onclick="startEditEvent('${e.id}')" class="btn btn-edit">Modify Parameters</button>
+                        <button onclick="deleteEvent('${e.id}')" class="btn btn-delete">Purge Record</button>
+                    </div>
+                `;
+            }
+
+            let thumbnailMarkup = '🖼️';
+            if (e.thumbnail) {
+                thumbnailMarkup = `<img src="${e.thumbnail}" class="thumb-zoom" alt="Event thumb">`;
+            }
+
+            let dateLabel = new Date(e.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            if (e.endDate) {
+                const endLabel = new Date(e.endDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                dateLabel += ` - ${endLabel}`;
+            }
+
+            let downloadsMarkup = '';
+            if (e.attachments && e.attachments.length > 0) {
+                downloadsMarkup = `
+                    <div class="download-section">
+                        <div class="download-title">Attachments & Operations Intel Flyers</div>
+                        <div class="download-grid">
+                `;
+                e.attachments.forEach((file, index) => {
+                    const btnClass = file.isPdf ? 'btn-dl-pdf' : 'btn-dl-img';
+                    const fileLabel = file.name || `Intel_Payload_${index + 1}`;
+                    downloadsMarkup += `<a href="${file.dataString}" download="${fileLabel}" class="${btnClass}">💾 Download ${fileLabel}</a>`;
+                });
+                downloadsMarkup += `</div></div>`;
+            }
+
+            return `
+                <div class="event-card ${isPast ? 'past-card' : ''}">
+                    <div class="card-body">
+                        <div class="card-meta-row">
+                            <div class="meta-left">
+                                <div class="thumb-wrapper">${thumbnailMarkup}</div>
+                                <div class="meta-details">
+                                    <div class="badge-row">
+                                        <span class="badge-date ${isPast ? 'past-badge-date' : ''}">${dateLabel}</span>
+                                        ${e.time ? `<span class="badge-info">⏰ ${e.time}</span>` : ''}
+                                        ${e.location ? `<span class="badge-info">📍 ${e.location}</span>` : ''}
+                                    </div>
+                                    <h3 class="event-title">${e.title}</h3>
+                                </div>
+                            </div>
+                            ${adminButtons}
+                        </div>
+                        ${e.description ? `<div class="event-desc">${e.description}</div>` : ''}
+                        ${downloadsMarkup}
+                    </div>
+                </div>
+            `;
         }
 
         function renderEvents() {
@@ -542,9 +607,12 @@
             const todayMidnight = new Date('2026-06-04T00:00:00');
 
             if (activeDateFilter) {
-                upcomingWrapper.classList.add('hidden');
+                // Keep both sections visible so upcoming dates show up in upcoming rows
+                upcomingWrapper.classList.remove('hidden');
                 pastWrapper.classList.remove('hidden');
-                pastWrapper.querySelector('.section-label').innerText = "🔍 Isolated Grid Vectors";
+                
+                upcomingWrapper.querySelector('.section-label').innerText = "🔍 Isolated Grid Vectors (Active Plan)";
+                pastWrapper.querySelector('.section-label').innerText = "🔍 Isolated Grid Vectors (Archived)";
                 
                 filterBanner.classList.remove('hidden');
                 const readableFilterDate = new Date(activeDateFilter + 'T00:00:00').toLocaleDateString('en-US', {
@@ -559,6 +627,7 @@
             } else {
                 upcomingWrapper.classList.remove('hidden');
                 pastWrapper.classList.remove('hidden');
+                upcomingWrapper.querySelector('.section-label').innerText = "🏍️ Active Operations & Deployments";
                 pastWrapper.querySelector('.section-label').innerText = "📜 Historical Archives";
                 filterBanner.classList.add('hidden');
             }
@@ -580,98 +649,21 @@
                 }
             });
 
-            upcomingEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
-            pastEvents.sort((a, b) => new Date(b.date) - new Date(a.date));
+            // Sort: upcoming ascending, past descending
+            upcomingEvents.sort((a, b) => new Date(a.date + 'T00:00:00') - new Date(b.date + 'T00:00:00'));
+            pastEvents.sort((a, b) => new Date(b.date + 'T00:00:00') - new Date(a.date + 'T00:00:00'));
 
-            if (activeDateFilter && filteredEvents.length === 0) {
-                pastList.innerHTML = `<div class="empty-state">No scheduled operational alerts match this matrix cell.</div>`;
-                return;
+            if (upcomingEvents.length === 0) {
+                upcomingList.innerHTML = `<div class="empty-state">No Active Operations logged for this matrix selection.</div>`;
+            } else {
+                upcomingEvents.forEach(e => { upcomingList.innerHTML += buildEventCardMarkup(e, false); });
             }
 
-            if (!activeDateFilter && upcomingEvents.length === 0) {
-                upcomingList.innerHTML = `<div class="empty-state">No active tactical operations scheduled on current track.</div>`;
+            if (pastEvents.length === 0) {
+                pastList.innerHTML = `<div class="empty-state">No Historical Logs match current spatial matrix criteria.</div>`;
+            } else {
+                pastEvents.forEach(e => { pastList.innerHTML += buildEventCardMarkup(e, true); });
             }
-            if (!activeDateFilter && pastEvents.length === 0) {
-                pastList.innerHTML = `<div class="empty-state">No past logs archived inside this cloud matrix node.</div>`;
-            }
-
-            const createEventCardElement = (event, isPast) => {
-                const cleanStart = new Date(event.date + 'T00:00:00').toLocaleDateString('en-US', {
-                    weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
-                });
-                
-                let dateBadgeText = cleanStart;
-                if (event.endDate && event.endDate !== event.date) {
-                    const cleanEnd = new Date(event.endDate + 'T00:00:00').toLocaleDateString('en-US', {
-                        weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
-                    });
-                    dateBadgeText = `${cleanStart} — ${cleanEnd}`;
-                }
-
-                const card = document.createElement('div');
-                card.className = `event-card ${isPast ? 'past-card' : ''}`;
-                
-                let mainFeatureImageHtml = '';
-                let visibleAttachmentsHtml = '';
-
-                if (event.attachments && event.attachments.length > 0) {
-                    const firstFile = event.attachments[0];
-                    let startIndex = 0;
-
-                    if (!firstFile.isPdf) {
-                        mainFeatureImageHtml = `
-                            <div class="main-banner-wrap" oncontextmenu="return false;">
-                                <img src="${firstFile.dataString}" alt="Event Banner" draggable="false">
-                            </div>`;
-                        startIndex = 1;
-                    }
-
-                    for (let i = startIndex; i < event.attachments.length; i++) {
-                        const file = event.attachments[i];
-                        const cleanName = file.name ? file.name.replace(/\s+/g, '_') : `file_${i}`;
-                        if (file.isPdf) {
-                            visibleAttachmentsHtml += `<a href="${file.dataString}" download="${cleanName}" class="btn btn-dl-pdf">📄 Briefing PDF: ${file.name || 'Intel'}</a>`;
-                        } else {
-                            visibleAttachmentsHtml += `<a href="${file.dataString}" download="${cleanName}.png" class="btn btn-dl-img">🖼️ Graphic Recon: ${file.name || 'Intel'}</a>`;
-                        }
-                    }
-                }
-
-                let thumbHtml = '';
-                if (event.thumbnail) {
-                    thumbHtml = `<div class="thumb-wrapper"><img src="${event.thumbnail}" class="thumb-zoom"></div>`;
-                }
-
-                card.innerHTML = `
-                    ${mainFeatureImageHtml}
-                    <div class="card-body">
-                        <div class="card-meta-row">
-                            <div class="meta-left">
-                                ${thumbHtml}
-                                <div class="meta-details">
-                                    <div class="badge-row">
-                                        <span class="badge-date ${isPast ? 'past-badge-date' : ''}">${dateBadgeText}</span>
-                                        ${event.time ? `<span class="badge-info">🕒 ${event.time}</span>` : ''}
-                                        ${event.location ? `<span class="badge-info">📍 ${event.location}</span>` : ''}
-                                    </div>
-                                    <h3 class="event-title">${event.title}</h3>
-                                </div>
-                            </div>
-                            ${isAdmin ? `
-                                <div class="admin-actions">
-                                    <button onclick="startEditEvent('${event.id}')" class="btn-edit">Modify</button>
-                                    <button onclick="deleteEvent('${event.id}')" class="btn-delete">Purge</button>
-                                </div>
-                            ` : ''}
-                        </div>
-                        ${event.description ? `<p class="event-desc">${event.description}</p>` : ''}
-                        ${visibleAttachmentsHtml ? `<div class="download-section"><h4 class="download-title">Strategic Intel Attachments</h4><div class="download-grid">${visibleAttachmentsHtml}</div></div>` : ''}
-                    </div>`;
-                return card;
-            };
-
-            upcomingEvents.forEach(evt => upcomingList.appendChild(createEventCardElement(evt, false)));
-            pastEvents.forEach(evt => pastList.appendChild(createEventCardElement(evt, true)));
         }
 
         function renderYearlyMatrix() {
@@ -679,60 +671,61 @@
             if (!container) return;
             container.innerHTML = '';
 
-            const allFlaggedDates = [];
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            
+            // Map out event dates across the whole array
+            const populatedDays = new Set();
             globalEventsArray.forEach(e => {
-                const rangeDays = getDatesInRange(e.date, e.endDate);
-                rangeDays.forEach(day => {
-                    if (!allFlaggedDates.includes(day)) allFlaggedDates.push(day);
-                });
+                const spans = getDatesInRange(e.date, e.endDate);
+                spans.forEach(d => populatedDays.add(d));
             });
 
-            const monthsLabels = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            for (let m = 0; m < 12; m++) {
+                const firstDayObject = new Date(activeDisplayYear, m, 1);
+                const totalDaysInMonth = new Date(activeDisplayYear, m + 1, 0).getDate();
+                const startDayOffset = firstDayObject.getDay(); // 0 = Sun, 1 = Mon etc
 
-            for (let monthIdx = 0; monthIdx < 12; monthIdx++) {
-                const monthBlock = document.createElement('div');
-                monthBlock.className = "month-block";
-                monthBlock.innerHTML = `
-                    <div class="month-name">${monthsLabels[monthIdx]}</div>
+                const block = document.createElement('div');
+                block.className = 'month-block';
+
+                let html = `
+                    <div class="month-name">${monthNames[m]}</div>
                     <div class="days-header-row">
                         <div class="day-label">S</div><div class="day-label">M</div><div class="day-label">T</div>
                         <div class="day-label">W</div><div class="day-label">T</div><div class="day-label">F</div>
                         <div class="day-label">S</div>
-                    </div>`;
+                    </div>
+                    <div class="days-grid">
+                `;
 
-                const daysGrid = document.createElement('div');
-                daysGrid.className = "days-grid";
-
-                const firstDayObject = new Date(activeDisplayYear, monthIdx, 1);
-                const startingDayOfWeek = firstDayObject.getDay();
-                const totalDaysInMonth = new Date(activeDisplayYear, monthIdx + 1, 0).getDate();
-
-                for (let emptyCell = 0; emptyCell < startingDayOfWeek; emptyCell++) {
-                    const padCell = document.createElement('div');
-                    padCell.className = "calendar-cell";
-                    daysGrid.appendChild(padCell);
+                // Offsets padding
+                for (let i = 0; i < startDayOffset; i++) {
+                    html += `<div class="calendar-cell"></div>`;
                 }
 
-                for (let dayNum = 1; dayNum <= totalDaysInMonth; dayNum++) {
-                    const dayCell = document.createElement('div');
-                    dayCell.className = "calendar-cell current-month-day";
-                    dayCell.innerText = dayNum;
+                // Days fill
+                for (let day = 1; day <= totalDaysInMonth; day++) {
+                    const isoMonthStr = String(m + 1).padStart(2, '0');
+                    const isoDayStr = String(day).padStart(2, '0');
+                    const currentIso = `${activeDisplayYear}-${isoMonthStr}-${isoDayStr}`;
 
-                    const formatMonth = String(monthIdx + 1).padStart(2, '0');
-                    const formatDay = String(dayNum).padStart(2, '0');
-                    const targetIsoString = `${activeDisplayYear}-${formatMonth}-${formatDay}`;
+                    let customClass = 'calendar-cell current-month-day';
+                    let interactionAttr = '';
 
-                    if (allFlaggedDates.includes(targetIsoString)) {
-                        dayCell.classList.add('has-event');
-                        dayCell.onclick = () => filterByDate(targetIsoString);
+                    if (populatedDays.has(currentIso)) {
+                        customClass += ' has-event';
+                        interactionAttr = `onclick="filterByDate('${currentIso}')"`;
                     }
-                    if (activeDateFilter === targetIsoString) {
-                        dayCell.classList.add('selected-day');
+                    if (activeDateFilter === currentIso) {
+                        customClass += ' selected-day';
                     }
-                    daysGrid.appendChild(dayCell);
+
+                    html += `<div class="${customClass}" ${interactionAttr}>${day}</div>`;
                 }
-                monthBlock.appendChild(daysGrid);
-                container.appendChild(monthBlock);
+
+                html += `</div>`;
+                block.innerHTML = html;
+                container.appendChild(block);
             }
         }
     </script>

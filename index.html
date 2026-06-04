@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patriot Riders WI-1 Calendar</title>
+    
+    <!-- PWA Capabilities -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="PR Logo_2.jpg">
+
+    <!-- Firebase Core App and Database SDKs (v9 Compatible Libraries) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <style>
+        /* BASE THEMING, WATERMARK, & MILITARY OVERLAY */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Courier New", Courier, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        
+        body { 
+            background-color: #f4f6f0; 
+            color: #1e293b; 
+            padding-bottom: 3rem; 
+            line-height: 1.5;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-image: 
+                linear-gradient(rgba(63, 98, 18, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(63, 98, 18, 0.03) 1px, transparent 1px),
+                url('PR Logo_2.jpg');
+            background-size: 40px 40px, 40px 40px, 45rem;
+            background-position: center center, center center, center center;
+            background-repeat: repeat, repeat, no-repeat;
+            opacity: 0.08;
+            pointer-events: none;
+        }
+        
+        .max-container { max-width: 80rem; margin: 0 auto; padding: 0 1rem; }
+
+        nav { 
+            background-color: #1b2e1a; 
+            color: #fef08a; 
+            padding: 0.75rem 0; 
+            position: sticky; 
+            top: 0; 
+            z-index: 50; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
+            border-bottom: 3px solid #3f6212;
+        }
+        .nav-container { display: flex; justify-content: space-between; align-items: center; max-width: 80rem; margin: 0 auto; padding: 0 1rem; }
+        .nav-branding { display: flex; align-items: center; gap: 0.5rem; }
+        
+        .nav-logo { width: 1.75rem; height: 1.75rem; object-fit: contain; filter: drop-shadow(0px 0px 2px rgba(255,255,255,0.5)); }
+        nav h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; display: flex; align-items: center; }
+        @media (min-width: 640px) { nav h1 { font-size: 1.25rem; } .nav-logo { width: 2.25rem; height: 2.25rem; } .nav-branding { gap: 0.75rem; } }
+        
+        .nav-actions { display: flex; align-items: center; gap: 0.75rem; }
+
+        /* TACTICAL BUTTONS */
+        .btn { padding: 0.5rem 1rem; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 700; border: 1px solid transparent; cursor: pointer; transition: background 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .btn-blue { background-color: #3f6212; color: #ffffff; border-color: #4d7c0f; } 
+        .btn-blue:hover { background-color: #14532d; }
+        .btn-slate { background-color: #475569; color: #ffffff; }
+        .btn-slate:hover { background-color: #334155; }
+        .btn-dark { background-color: #1b2e1a; color: #fef08a; padding: 0.625rem 1.5rem; font-size: 1rem; border: 1px solid #3f6212; }
+        .btn-dark:hover { background-color: #3f6212; color: #ffffff; }
+        .btn-edit { background-color: #fef9c3; color: #854d0e; border: 1px solid #fef08a; font-size: 0.75rem; padding: 0.5rem 0.875rem; }
+        .btn-edit:hover { background-color: #fef08a; }
+        .btn-delete { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; font-size: 0.75rem; padding: 0.5rem 0.875rem; }
+        .btn-delete:hover { background-color: #fca5a5; }
+        .btn-dl-pdf { background-color: #991b1b; color: #ffffff; font-size: 0.75rem; padding: 0.625rem 1rem; }
+        .btn-dl-img { background-color: #3f6212; color: #ffffff; font-size: 0.75rem; padding: 0.625rem 1rem; }
+
+        /* LAYOUT CORE SPLIT SYSTEM */
+        .layout-grid { display: grid; grid-template-columns: 1fr; gap: 2rem; margin-top: 1.5rem; }
+        @media (min-width: 1024px) {
+            .layout-grid { grid-template-columns: 1fr 24rem; align-items: start; }
+            .sidebar-sticky { position: sticky; top: 5.5rem; max-height: calc(100vh - 7rem); overflow-y: auto; padding-right: 0.25rem; }
+        }
+
+        /* HOST DASHBOARD PANEL */
+        .panel { background-color: #ffffff; padding: 1.5rem; border-radius: 0.25rem; border: 2px solid #3f6212; margin-top: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .hidden { display: none !important; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; }
+        .panel-title { font-size: 1.125rem; font-weight: 700; color: #1b2e1a; display: flex; align-items: center; gap: 0.5rem; text-transform: uppercase; }
+        .badge-active { font-size: 0.75rem; background-color: #dcfce7; color: #14532d; padding: 0.125rem 0.5rem; border: 1px solid #bbf7d0; font-weight: bold; }
+        .badge-mod { font-size: 0.75rem; background-color: #fef9c3; color: #713f12; padding: 0.125rem 0.5rem; border: 1px solid #fef08a; font-weight: 700; }
+        .btn-cancel { font-size: 0.75rem; color: #991b1b; background: #fef2f2; border: 1px solid #fee2e2; padding: 0.25rem 0.5rem; font-weight: 700; cursor: pointer; text-transform: uppercase; }
+        
+        .grid-form { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+        @media (min-width: 768px) { 
+            .grid-form { grid-template-columns: repeat(4, 1fr); } 
+            .span-1 { grid-column: span 1; }
+            .span-2 { grid-column: span 2; } 
+            .span-4 { grid-column: span 4; }
+        }
+        
+        .form-group label { display: block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #475569; margin-bottom: 0.25rem; letter-spacing: 0.05em; }
+        .form-group input[type="text"], .form-group input[type="date"], .form-group textarea { width: 100%; padding: 0.625rem; background-color: #fafaf9; border: 1px solid #cbd5e1; border-radius: 0.25rem; outline: none; font-size: 0.95rem; }
+        .form-group input:focus, .form-group textarea:focus { border-color: #3f6212; box-shadow: 0 0 0 2px rgba(63,98,18,0.2); }
+        .form-group input[type="file"] { display: block; width: 100%; font-size: 0.75rem; color: #475569; background-color: #fafaf9; border: 1px solid #cbd5e1; padding: 0.375rem; }
+        .field-banner { font-size: 10px; color: #ca8a04; font-weight: bold; margin-top: 0.125rem; }
+        .text-right { text-align: right; }
+        .preview-flex { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.375rem; }
+        .live-thumb-preview { width: 4rem; height: 4rem; border: 2px dashed #3f6212; background-color: #fafaf9; display: flex; align-items: center; justify-content: center; overflow: hidden; object-fit: cover; flex-shrink: 0; }
+
+        /* CALENDAR ENTRIES STYLING */
+        .section-label { font-size: 0.875rem; font-weight: 700; color: #1b2e1a; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid #3f6212; padding-left: 0.5rem; }
+        .section-label:first-of-type { margin-top: 0; }
+        .events-container { display: flex; flex-direction: column; gap: 1.5rem; }
+        .event-card { background-color: rgba(255, 255, 255, 0.96); border-radius: 0.25rem; border: 1px solid #cbd5e1; border-left: 4px solid #3f6212; box-shadow: 0 2px 4px rgba(0,0,0,0.05); overflow: hidden; display: flex; flex-direction: column; transition: border-color 0.2s; backdrop-filter: blur(4px); }
+        .event-card:hover { border-color: #3f6212; }
+        
+        .past-card { border-left: 4px solid #64748b; opacity: 0.85; }
+        .past-card:hover { opacity: 1; }
+
+        .main-banner-wrap { width: 100%; background-color: #020617; display: flex; justify-content: center; max-height: 500px; overflow: hidden; border-bottom: 1px solid #cbd5e1; user-select: none; pointer-events: none; }
+        .main-banner-wrap img { width: 100%; height: auto; object-fit: contain; max-height: 500px; }
+
+        .card-body { padding: 1.5rem; }
+        .card-meta-row { display: flex; flex-direction: column; gap: 1rem; }
+        @media (min-width: 768px) { .card-meta-row { flex-direction: row; justify-content: space-between; align-items: center; } }
+        .meta-left { display: flex; align-items: flex-start; gap: 1rem; width: 100%; }
+        .thumb-wrapper { position: relative; flex-shrink: 0; padding-right: 0.25rem; }
+        
+        .thumb-zoom { 
+            width: 4rem; height: 4rem; border-radius: 0.25rem; border: 1px solid #cbd5e1; 
+            object-fit: cover; background-color: #fafaf9; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); 
+            display: block; transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            transform-origin: center center;
+        }
+        .thumb-zoom:hover { transform: scale(1.4); z-index: 40; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+
+        .meta-details { display: flex; flex-direction: column; gap: 0.25rem; flex: 1; width: 100%; }
+        .badge-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+        .badge-date { background-color: #1b2e1a; color: #fef08a; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.625rem; border-radius: 0.125rem; border: 1px solid #3f6212; }
+        .past-badge-date { background-color: #475569; color: #ffffff; border-color: #64748b; }
+        .badge-info { font-size: 0.75rem; color: #1b2e1a; font-weight: 700; background-color: #f0f4f0; padding: 0.25rem 0.5rem; border-radius: 0.125rem; border: 1px solid #cbd5e1; }
+        .event-title { font-size: 1.25rem; font-weight: 900; color: #1b2e1a; margin-top: 0.25rem; letter-spacing: -0.015em; text-transform: uppercase; }
+        .admin-actions { display: flex; align-items: center; gap: 0.5rem; align-self: flex-end; }
+        @media (min-width: 768px) { .admin-actions { align-self: center; } }
+
+        .event-desc { font-size: 0.875rem; color: #334155; margin-top: 1rem; background-color: rgba(248, 250, 252, 0.95); padding: 1rem; border-radius: 0.125rem; border: 1px solid #cbd5e1; border-left: 2px solid #3f6212; white-space: pre-line; font-weight: 500; }
+        .download-section { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #cbd5e1; }
+        .download-title { font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 0.625rem; letter-spacing: 0.05em; }
+        .download-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+        .empty-state { text-align: center; background: rgba(255, 255, 255, 0.9); border: 1px solid #cbd5e1; color: #64748b; padding: 2rem 1rem; font-weight: 600; }
+
+        /* FILTER CONTROLLER BANNER */
+        .filter-banner { background-color: #fef9c3; border: 1px solid #fef08a; padding: 0.75rem 1rem; border-radius: 0.25rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.875rem; color: #713f12; font-weight: 600; }
+        .btn-clear-filter { background: #ca8a04; color: #1b2e1a; border: none; padding: 0.25rem 0.75rem; border-radius: 0.125rem; cursor: pointer; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
+        .btn-clear-filter:hover { background: #a16207; color: #ffffff; }
+
+        /* INTERACTIVE SIDEBAR STRATEGIC MATRIX MAP */
+        .sidebar-card { background: rgba(255, 255, 255, 0.96); border: 2px solid #3f6212; border-radius: 0.25rem; padding: 1.25rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); backdrop-filter: blur(4px); }
+        .sidebar-title { font-size: 1rem; font-weight: 800; color: #1b2e1a; margin-bottom: 0.25rem; display: flex; align-items: center; justify-content: space-between; text-transform: uppercase; letter-spacing: 0.05em; }
+        .year-subtitle { font-size: 0.75rem; color: #475569; font-weight: 600; text-transform: uppercase; margin-bottom: 1.25rem; letter-spacing: 0.025em; }
+        
+        .months-grid { display: flex; flex-direction: column; gap: 1.25rem; }
+        .month-block { background: #fafaf9; border: 1px solid #cbd5e1; padding: 0.75rem; border-radius: 0.125rem; }
+        .month-name { font-size: 0.8rem; font-weight: 800; color: #1b2e1a; text-transform: uppercase; border-bottom: 2px solid #3f6212; padding-bottom: 0.25rem; margin-bottom: 0.5rem; text-align: center; letter-spacing: 0.05em; }
+        
+        .days-header-row { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; margin-bottom: 0.25rem; }
+        .day-label { font-size: 0.65rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        
+        .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; row-gap: 0.25rem; }
+        .calendar-cell { font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0; color: #cbd5e1; user-select: none; }
+        .current-month-day { color: #334155; border-radius: 0.125rem; position: relative; }
+        
+        .has-event { background-color: #3f6212 !important; color: #ffffff !important; font-weight: 700; cursor: pointer; transition: transform 0.1s; border: 1px solid #14532d; }
+        .has-event:hover { transform: scale(1.25); z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.3); background-color: #14532d !important; }
+        .has-event::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 3px; height: 3px; background-color: #fef08a; border-radius: 50%; }
+        
+        .selected-day { outline: 2px solid #ca8a04; background-color: #ca8a04 !important; color: #1b2e1a !important; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-container">
+            <div class="nav-branding">
+                <img src="PR Logo_2.jpg" alt="Patriot Riders Logo" class="nav-logo" onerror="this.style.display='none'">
+                <h1><span>Patriot Riders of America WI Chapter 1</span></h1>
+            </div>
+            <div class="nav-actions">
+                <button id="admin-toggle-btn" onclick="toggleAdminMode()" class="btn btn-blue">Dashboard Access</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-container">
+        
+        <!-- Host Dashboard Form Panel -->
+        <div id="host-panel" class="panel hidden">
+            <div class="panel-header">
+                <h2 id="form-heading" class="panel-title">🛠️ Log Mission/Event <span class="badge-active">Ready</span></h2>
+                <button onclick="cancelEditing()" id="cancel-edit-btn" class="btn-cancel hidden">Abort Changes</button>
+            </div>
+            
+            <form id="event-form" class="grid-form" onsubmit="handleFormSubmit(event)">
+                <input type="hidden" id="edit-event-id" value="">
+
+                <div class="form-group span-2">
+                    <label>Event / Mission Title</label>
+                    <input type="text" id="title" required>
+                </div>
+                <div class="form-group span-1">
+                    <label>Start Date</label>
+                    <input type="date" id="date" required>
+                </div>
+                <div class="form-group span-1">
+                    <label>End Date (Multi-Day Options)</label>
+                    <input type="date" id="end-date">
+                </div>
+                <div class="form-group span-2">
+                    <label>Registration / Staging Time</label>
+                    <input type="text" id="time" placeholder="e.g., 0900 - 1030 HRS">
+                </div>
+                <div class="form-group span-2">
+                    <label>Location / Staging Coordinates</label>
+                    <input type="text" id="location" placeholder="e.g., Eden, WI">
+                </div>
+                
+                <div class="form-group span-2">
+                    <label>Card Thumbnail Icon (Optional)</label>
+                    <div class="preview-flex">
+                        <div id="thumb-preview-box" class="live-thumb-preview">🖼️</div>
+                        <input type="file" id="thumbnail-input" accept="image/*" onchange="previewThumbnailFile(this)">
+                    </div>
+                    <div id="thumb-edit-banner" class="field-banner hidden">⚠️ Action will override previous asset.</div>
+                </div>
+
+                <div class="form-group span-2">
+                    <label>Upload Mission Intel Attachments (Flyers/PDFs)</label>
+                    <input type="file" id="flyer-input" accept="image/*,application/pdf" multiple>
+                    <div id="flyers-edit-banner" class="field-banner hidden">⚠️ Action will override previous attachment payload.</div>
+                </div>
+
+                <div class="form-group span-4">
+                    <label>Detailed Briefing, Schedule & Pricing</label>
+                    <textarea id="description" rows="4" placeholder="Enter route parameters, stops, donation goals, and guidelines..."></textarea>
+                </div>
+                <div class="form-group span-4 text-right">
+                    <button type="submit" id="submit-btn" class="btn btn-dark">Publish to Live App</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="layout-grid">
+            <div>
+                <div id="filter-status-area" class="hidden">
+                    <div class="filter-banner">
+                        <span id="filter-message">Isolating designated operations</span>
+                        <button onclick="clearDateFilter()" class="btn-clear-filter">Reset Grid Layout</button>
+                    </div>
+                </div>
+
+                <div id="upcoming-section-wrapper">
+                    <h2 class="section-label">🏍️ Active Operations & Deployments</h2>
+                    <div id="upcoming-events-list" class="events-container"></div>
+                </div>
+
+                <div id="past-section-wrapper">
+                    <h2 class="section-label">📜 Historical Archives</h2>
+                    <div id="past-events-list" class="events-container"></div>
+                </div>
+            </div>
+
+            <div class="sidebar-sticky">
+                <div class="section-label">Strategic Grid Matrix</div>
+                <div class="sidebar-card">
+                    <div class="sidebar-title">
+                        <span>Calendar Log</span>
+                        <span id="calendar-year-label" style="color: #3f6212;">2026</span>
+                    </div>
+                    <div class="year-subtitle">Select highlighted targets to filter logs</div>
+                    <div id="matrix-months-container" class="months-grid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 🔒 FIREBASE INTEGRATION ENGINE
+        // ==========================================
+        const firebaseConfig = {
+  apiKey: "AIzaSyCniExkOprcUUTtid1QzVUTNRm36E78Uso",
+  authDomain: "pr-wi-chapter-1-calendar.firebaseapp.com",
+  projectId: "pr-wi-chapter-1-calendar",
+  storageBucket: "pr-wi-chapter-1-calendar.firebasestorage.app",
+  messagingSenderId: "810452049591",
+  appId: "1:810452049591:web:eb62d74074928e6a443732"
+};
+        
+        // Change this string to set your custom Host Admin access password
+        const SECRET_HOST_PASSWORD = "Veteran123"; 
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const dbRef = database.ref("events");
+
+        let isAdmin = false;
+        let cacheFlyers = [];
+        let cacheThumb = null;
+        let activeDateFilter = null; 
+        let activeDisplayYear = 2026;
+        let globalEventsArray = [];
+
+        // Stream and sync cloud updates automatically
+        window.addEventListener('DOMContentLoaded', () => {
+            dbRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                globalEventsArray = [];
+                if (data) {
+                    Object.keys(data).forEach(key => {
+                        globalEventsArray.push({ id: key, ...data[key] });
+                    });
+                }
+                initializeYearTracker();
+                safelyRenderAll();
+            });
+        });
+
+        function initializeYearTracker() {
+            if (globalEventsArray.length > 0) {
+                const years = globalEventsArray.map(e => new Date(e.date + 'T00:00:00').getFullYear());
+                activeDisplayYear = Math.max(...years);
+            } else {
+                activeDisplayYear = 2026;
+            }
+            document.getElementById('calendar-year-label').innerText = activeDisplayYear;
+        }
+
+        function safelyRenderAll() {
+            renderEvents();
+            renderYearlyMatrix();
+        }
+
+        function getDatesInRange(startDateStr, endDateStr) {
+            const dates = [];
+            if (!startDateStr) return dates;
+            let current = new Date(startDateStr + 'T00:00:00');
+            const endLimitStr = endDateStr ? endDateStr : startDateStr;
+            const finalEnd = new Date(endLimitStr + 'T00:00:00');
+            while (current <= finalEnd) {
+                const y = current.getFullYear();
+                const m = String(current.getMonth() + 1).padStart(2, '0');
+                const d = String(current.getDate()).padStart(2, '0');
+                dates.push(`${y}-${m}-${d}`);
+                current.setDate(current.getDate() + 1);
+            }
+            return dates;
+        }
+
+        async function previewThumbnailFile(inputElement) {
+            const previewBox = document.getElementById('thumb-preview-box');
+            if (inputElement.files && inputElement.files[0]) {
+                const parsed = await parseFile(inputElement.files[0]);
+                if (parsed) {
+                    previewBox.innerHTML = `<img src="${parsed.dataString}" style="width:100%; height:100%; object-fit:cover;">`;
+                    return;
+                }
+            }
+            previewBox.innerHTML = '🖼️';
+        }
+
+        function toggleAdminMode() {
+            if (!isAdmin) {
+                const challenge = prompt("Enter Tactical Host Access Password:");
+                if (challenge === SECRET_HOST_PASSWORD) {
+                    isAdmin = true;
+                    document.getElementById('host-panel').classList.remove('hidden');
+                    document.getElementById('admin-toggle-btn').innerText = "Lock Dashboard";
+                    document.getElementById('admin-toggle-btn').className = "btn btn-slate";
+                } else if (challenge !== null) {
+                    alert("Access Denied: Invalid Credentials.");
+                }
+            } else {
+                isAdmin = false;
+                document.getElementById('host-panel').classList.add('hidden');
+                cancelEditing();
+                document.getElementById('admin-toggle-btn').innerText = "Dashboard Access";
+                document.getElementById('admin-toggle-btn').className = "btn btn-blue";
+            }
+            safelyRenderAll();
+        }
+
+        function parseFile(file) {
+            return new Promise((resolve) => {
+                if (!file) resolve(null);
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    resolve({
+                        dataString: reader.result,
+                        isPdf: file.type === 'application/pdf',
+                        name: file.name
+                    });
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            if(!isAdmin) return alert("Unauthorized modification attempt.");
+            
+            const eventIdInput = document.getElementById('edit-event-id').value;
+            const thumbInput = document.getElementById('thumbnail-input');
+            const filesInput = document.getElementById('flyer-input');
+
+            let finalThumbnail = cacheThumb;
+            if (thumbInput.files.length > 0) {
+                const processedThumb = await parseFile(thumbInput.files[0]);
+                finalThumbnail = processedThumb ? processedThumb.dataString : null;
+            }
+
+            let finalFlyersList = [...cacheFlyers];
+            if (filesInput.files.length > 0) {
+                finalFlyersList = []; 
+                for (let i = 0; i < filesInput.files.length; i++) {
+                    const processedFile = await parseFile(filesInput.files[i]);
+                    if (processedFile) finalFlyersList.push(processedFile);
+                }
+            }
+            
+            const inputStartDateString = document.getElementById('date').value;
+            const inputEndDateString = document.getElementById('end-date').value || null;
+
+            const eventPayload = {
+                title: document.getElementById('title').value,
+                date: inputStartDateString,
+                endDate: inputEndDateString,
+                time: document.getElementById('time').value,
+                location: document.getElementById('location').value,
+                description: document.getElementById('description').value,
+                thumbnail: finalThumbnail,
+                attachments: finalFlyersList
+            };
+
+            if (eventIdInput) {
+                database.ref("events/" + eventIdInput).set(eventPayload, (err) => {
+                    if(!err) cancelEditing();
+                });
+            } else {
+                const newKey = database.ref().child('events').push().key;
+                database.ref("events/" + newKey).set(eventPayload, (err) => {
+                    if(!err) cancelEditing();
+                });
+            }
+        }
+
+        function startEditEvent(id) {
+            const event = globalEventsArray.find(item => item.id === id);
+            if (!event) return;
+
+            document.getElementById('edit-event-id').value = event.id;
+            document.getElementById('title').value = event.title;
+            document.getElementById('date').value = event.date;
+            document.getElementById('end-date').value = event.endDate || '';
+            document.getElementById('time').value = event.time;
+            document.getElementById('location').value = event.location;
+            document.getElementById('description').value = event.description;
+
+            cacheThumb = event.thumbnail || null;
+            cacheFlyers = event.attachments || [];
+
+            const previewBox = document.getElementById('thumb-preview-box');
+            if (cacheThumb) {
+                previewBox.innerHTML = `<img src="${cacheThumb}" style="width:100%; height:100%; object-fit:cover;">`;
+            } else {
+                previewBox.innerHTML = '🖼️';
+            }
+
+            document.getElementById('form-heading').innerHTML = `🛠️ Modifying Briefing: "${event.title}" <span class="badge-mod">Adjusting Payload</span>`;
+            document.getElementById('submit-btn').innerText = "Update Mission Parameters";
+            document.getElementById('submit-btn').className = "btn btn-amber";
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            
+            if (cacheThumb) document.getElementById('thumb-edit-banner').classList.remove('hidden');
+            if (cacheFlyers.length > 0) document.getElementById('flyers-edit-banner').classList.remove('hidden');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function cancelEditing() {
+            document.getElementById('event-form').reset();
+            document.getElementById('edit-event-id').value = "";
+            document.getElementById('thumb-preview-box').innerHTML = '🖼️';
+            cacheThumb = null;
+            cacheFlyers = [];
+
+            document.getElementById('form-heading').innerHTML = `🛠️ Log Mission/Event <span class="badge-active">Ready</span>`;
+            document.getElementById('submit-btn').innerText = "Publish to Live App";
+            document.getElementById('submit-btn').className = "btn btn-dark";
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
+            document.getElementById('thumb-edit-banner').classList.add('hidden');
+            document.getElementById('flyers-edit-banner').classList.add('hidden');
+        }
+
+        function deleteEvent(id) {
+            if (confirm("Decommission this record from active cloud backend?")) {
+                database.ref("events/" + id).remove(() => {
+                    if (document.getElementById('edit-event-id').value === id) cancelEditing();
+                });
+            }
+        }
+
+        function filterByDate(isoString) {
+            activeDateFilter = isoString;
+            safelyRenderAll();
+        }
+
+        function clearDateFilter() {
+            activeDateFilter = null;
+            safelyRenderAll();
+        }
+
+        function renderEvents() {
+            const upcomingList = document.getElementById('upcoming-events-list');
+            const pastList = document.getElementById('past-events-list');
+            const filterBanner = document.getElementById('filter-status-area');
+            const filterMsg = document.getElementById('filter-message');
+            const upcomingWrapper = document.getElementById('upcoming-section-wrapper');
+            const pastWrapper = document.getElementById('past-section-wrapper');
+
+            if (!upcomingList || !pastList) return;
+
+            let filteredEvents = [...globalEventsArray];
+            const todayMidnight = new Date('2026-06-04T00:00:00');
+
+            if (activeDateFilter) {
+                upcomingWrapper.classList.add('hidden');
+                pastWrapper.classList.remove('hidden');
+                pastWrapper.querySelector('.section-label').innerText = "🔍 Isolated Grid Vectors";
+                
+                filterBanner.classList.remove('hidden');
+                const readableFilterDate = new Date(activeDateFilter + 'T00:00:00').toLocaleDateString('en-US', {
+                    year: 'numeric', month: 'long', day: 'numeric'
+                });
+                filterMsg.innerText = `Strategic Isolation Map: Displaying tasks covering ${readableFilterDate}`;
+                
+                filteredEvents = filteredEvents.filter(e => {
+                    const daysSpan = getDatesInRange(e.date, e.endDate);
+                    return daysSpan.includes(activeDateFilter);
+                });
+            } else {
+                upcomingWrapper.classList.remove('hidden');
+                pastWrapper.classList.remove('hidden');
+                pastWrapper.querySelector('.section-label').innerText = "📜 Historical Archives";
+                filterBanner.classList.add('hidden');
+            }
+
+            upcomingList.innerHTML = '';
+            pastList.innerHTML = '';
+
+            let upcomingEvents = [];
+            let pastEvents = [];
+
+            filteredEvents.forEach(e => {
+                const terminalDateStr = e.endDate ? e.endDate : e.date;
+                const terminalDate = new Date(terminalDateStr + 'T00:00:00');
+                
+                if (terminalDate >= todayMidnight) {
+                    upcomingEvents.push(e);
+                } else {
+                    pastEvents.push(e);
+                }
+            });
+
+            upcomingEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
+            pastEvents.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (activeDateFilter && filteredEvents.length === 0) {
+                pastList.innerHTML = `<div class="empty-state">No scheduled operational alerts match this matrix cell.</div>`;
+                return;
+            }
+
+            if (!activeDateFilter && upcomingEvents.length === 0) {
+                upcomingList.innerHTML = `<div class="empty-state">No active tactical operations scheduled on current track.</div>`;
+            }
+            if (!activeDateFilter && pastEvents.length === 0) {
+                pastList.innerHTML = `<div class="empty-state">No past logs archived inside this cloud matrix node.</div>`;
+            }
+
+            const createEventCardElement = (event, isPast) => {
+                const cleanStart = new Date(event.date + 'T00:00:00').toLocaleDateString('en-US', {
+                    weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+                });
+                
+                let dateBadgeText = cleanStart;
+                if (event.endDate && event.endDate !== event.date) {
+                    const cleanEnd = new Date(event.endDate + 'T00:00:00').toLocaleDateString('en-US', {
+                        weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+                    });
+                    dateBadgeText = `${cleanStart} — ${cleanEnd}`;
+                }
+
+                const card = document.createElement('div');
+                card.className = `event-card ${isPast ? 'past-card' : ''}`;
+                
+                let mainFeatureImageHtml = '';
+                let visibleAttachmentsHtml = '';
+
+                if (event.attachments && event.attachments.length > 0) {
+                    const firstFile = event.attachments[0];
+                    let startIndex = 0;
+
+                    if (!firstFile.isPdf) {
+                        mainFeatureImageHtml = `
+                            <div class="main-banner-wrap" oncontextmenu="return false;">
+                                <img src="${firstFile.dataString}" alt="Event Banner" draggable="false">
+                            </div>`;
+                        startIndex = 1;
+                    }
+
+                    for (let i = startIndex; i < event.attachments.length; i++) {
+                        const file = event.attachments[i];
+                        const cleanName = file.name ? file.name.replace(/\s+/g, '_') : `file_${i}`;
+                        if (file.isPdf) {
+                            visibleAttachmentsHtml += `<a href="${file.dataString}" download="${cleanName}" class="btn btn-dl-pdf">📄 Briefing PDF: ${file.name || 'Intel'}</a>`;
+                        } else {
+                            visibleAttachmentsHtml += `<a href="${file.dataString}" download="${cleanName}.png" class="btn btn-dl-img">🖼️ Graphic Recon: ${file.name || 'Intel'}</a>`;
+                        }
+                    }
+                }
+
+                let thumbHtml = '';
+                if (event.thumbnail) {
+                    thumbHtml = `<div class="thumb-wrapper"><img src="${event.thumbnail}" class="thumb-zoom"></div>`;
+                }
+
+                card.innerHTML = `
+                    ${mainFeatureImageHtml}
+                    <div class="card-body">
+                        <div class="card-meta-row">
+                            <div class="meta-left">
+                                ${thumbHtml}
+                                <div class="meta-details">
+                                    <div class="badge-row">
+                                        <span class="badge-date ${isPast ? 'past-badge-date' : ''}">${dateBadgeText}</span>
+                                        ${event.time ? `<span class="badge-info">🕒 ${event.time}</span>` : ''}
+                                        ${event.location ? `<span class="badge-info">📍 ${event.location}</span>` : ''}
+                                    </div>
+                                    <h3 class="event-title">${event.title}</h3>
+                                </div>
+                            </div>
+                            ${isAdmin ? `
+                                <div class="admin-actions">
+                                    <button onclick="startEditEvent('${event.id}')" class="btn-edit">Modify</button>
+                                    <button onclick="deleteEvent('${event.id}')" class="btn-delete">Purge</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                        ${event.description ? `<p class="event-desc">${event.description}</p>` : ''}
+                        ${visibleAttachmentsHtml ? `<div class="download-section"><h4 class="download-title">Strategic Intel Attachments</h4><div class="download-grid">${visibleAttachmentsHtml}</div></div>` : ''}
+                    </div>`;
+                return card;
+            };
+
+            upcomingEvents.forEach(evt => upcomingList.appendChild(createEventCardElement(evt, false)));
+            pastEvents.forEach(evt => pastList.appendChild(createEventCardElement(evt, true)));
+        }
+
+        function renderYearlyMatrix() {
+            const container = document.getElementById('matrix-months-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const allFlaggedDates = [];
+            globalEventsArray.forEach(e => {
+                const rangeDays = getDatesInRange(e.date, e.endDate);
+                rangeDays.forEach(day => {
+                    if (!allFlaggedDates.includes(day)) allFlaggedDates.push(day);
+                });
+            });
+
+            const monthsLabels = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+            for (let monthIdx = 0; monthIdx < 12; monthIdx++) {
+                const monthBlock = document.createElement('div');
+                monthBlock.className = "month-block";
+                monthBlock.innerHTML = `
+                    <div class="month-name">${monthsLabels[monthIdx]}</div>
+                    <div class="days-header-row">
+                        <div class="day-label">S</div><div class="day-label">M</div><div class="day-label">T</div>
+                        <div class="day-label">W</div><div class="day-label">T</div><div class="day-label">F</div>
+                        <div class="day-label">S</div>
+                    </div>`;
+
+                const daysGrid = document.createElement('div');
+                daysGrid.className = "days-grid";
+
+                const firstDayObject = new Date(activeDisplayYear, monthIdx, 1);
+                const startingDayOfWeek = firstDayObject.getDay();
+                const totalDaysInMonth = new Date(activeDisplayYear, monthIdx + 1, 0).getDate();
+
+                for (let emptyCell = 0; emptyCell < startingDayOfWeek; emptyCell++) {
+                    const padCell = document.createElement('div');
+                    padCell.className = "calendar-cell";
+                    daysGrid.appendChild(padCell);
+                }
+
+                for (let dayNum = 1; dayNum <= totalDaysInMonth; dayNum++) {
+                    const dayCell = document.createElement('div');
+                    dayCell.className = "calendar-cell current-month-day";
+                    dayCell.innerText = dayNum;
+
+                    const formatMonth = String(monthIdx + 1).padStart(2, '0');
+                    const formatDay = String(dayNum).padStart(2, '0');
+                    const targetIsoString = `${activeDisplayYear}-${formatMonth}-${formatDay}`;
+
+                    if (allFlaggedDates.includes(targetIsoString)) {
+                        dayCell.classList.add('has-event');
+                        dayCell.onclick = () => filterByDate(targetIsoString);
+                    }
+                    if (activeDateFilter === targetIsoString) {
+                        dayCell.classList.add('selected-day');
+                    }
+                    daysGrid.appendChild(dayCell);
+                }
+                monthBlock.appendChild(daysGrid);
+                container.appendChild(monthBlock);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -68,7 +68,7 @@
         .btn { padding: 0.5rem 1rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 600; border: 1px solid transparent; cursor: pointer; transition: background 0.2s, color 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; letter-spacing: 0.025em; }
         .btn-blue { background-color: #1d4ed8; color: #ffffff; border-color: #2563eb; } 
         .btn-blue:hover { background-color: #1e40af; }
-        .btn-slate { background-color: #475569; color: #ffffff; }
+        .btn-slate { background-color: #475569; color: #ffffff; border-color: #334155; }
         .btn-slate:hover { background-color: #334155; }
         .btn-amber { background-color: #d97706; color: #ffffff; border-color: #b45309; }
         .btn-amber:hover { background-color: #b45309; }
@@ -142,9 +142,6 @@
         .events-container { display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 2rem; }
         .event-card { background-color: rgba(255, 255, 255, 0.98); border-radius: 0.375rem; border: 1px solid #e2e8f0; border-left: 5px solid #1d4ed8; box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden; display: flex; flex-direction: column; transition: border-color 0.2s, box-shadow 0.2s; backdrop-filter: blur(4px); }
         .event-card:hover { border-color: #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        
-        .past-card { border-left: 5px solid #64748b; opacity: 0.85; }
-        .past-card:hover { opacity: 1; }
 
         .card-body { padding: 1.5rem; }
         .card-meta-row { display: flex; flex-direction: column; gap: 1rem; }
@@ -163,7 +160,6 @@
         .meta-details { display: flex; flex-direction: column; gap: 0.35rem; flex: 1; width: 100%; }
         .badge-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
         .badge-date { background-color: #0f172a; color: #ffffff; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.625rem; border-radius: 0.25rem; }
-        .past-badge-date { background-color: #475569; }
         .badge-info { font-size: 0.75rem; color: #334155; font-weight: 600; background-color: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 0.25rem; border: 1px solid #e2e8f0; }
         .event-title { font-size: 1.25rem; font-weight: 700; color: #0f172a; margin-top: 0.125rem; }
         .admin-actions { display: flex; align-items: center; gap: 0.5rem; align-self: flex-end; }
@@ -190,6 +186,7 @@
                 <h1>Patriot Riders of America WI Chapter 1</h1>
             </div>
             <div class="nav-actions">
+                <a href="past-events.html" class="btn btn-slate">📜 View Past Archives</a>
                 <button id="admin-toggle-btn" onclick="toggleAdminMode()" class="btn btn-blue">Dashboard Access</button>
             </div>
         </div>
@@ -197,7 +194,6 @@
 
     <div class="max-container">
         
-        <!-- SINGLE MONTH CALENDAR CONTAINER WITH LEFT/RIGHT CONTROLS -->
         <div class="top-calendar-container">
             <div class="calendar-header-row">
                 <div class="calendar-title-wrapper">
@@ -280,11 +276,6 @@
                 <h2 class="section-label">📅 Upcoming Events & Activities</h2>
                 <div id="upcoming-events-list" class="events-container"></div>
             </div>
-
-            <div id="past-section-wrapper">
-                <h2 class="section-label">📜 Past Event Archives</h2>
-                <div id="past-events-list" class="events-container"></div>
-            </div>
         </div>
         
     </div>
@@ -346,7 +337,6 @@
             document.getElementById('calendar-year-label').innerText = `${monthNames[activeDisplayMonth]} ${activeDisplayYear}`;
         }
 
-        // Handles Left and Right Month Scrolling
         function scrollMonth(offset) {
             activeDisplayMonth += offset;
             if (activeDisplayMonth > 11) {
@@ -429,7 +419,6 @@
             });
         }
 
-        // Smart system app handling tool configuration
         function openAttachmentWindow(base64DataStr, explicitType) {
             try {
                 const splitData = base64DataStr.split(',');
@@ -446,18 +435,15 @@
                 const fileBlob = new Blob([arrayBuffer], { type: mimeString });
                 const transientUrl = URL.createObjectURL(fileBlob);
 
-                // Check if file is a PDF to trigger program handling streams
                 if (mimeString.toLowerCase().includes('pdf')) {
                     const trackingAnchor = document.createElement('a');
                     trackingAnchor.href = transientUrl;
                     trackingAnchor.target = '_blank';
-                    // Appends reference metadata to clear data layer pipeline channels for Acrobat
                     trackingAnchor.type = 'application/pdf'; 
                     document.body.appendChild(trackingAnchor);
                     trackingAnchor.click();
                     document.body.removeChild(trackingAnchor);
                 } else {
-                    // Images and basic layouts fall back immediately into optimized clean window frames
                     window.open(transientUrl, '_blank');
                 }
             } catch (err) {
@@ -578,7 +564,6 @@
             }
             safelyRenderAll();
 
-            // Smooth scroll target to let the view jump perfectly to matching events card layout
             if (activeDateFilter) {
                 const targetAnchorElement = document.getElementById('events-display-anchor');
                 if (targetAnchorElement) {
@@ -592,7 +577,7 @@
             safelyRenderAll();
         }
 
-        function buildEventCardMarkup(e, isPast) {
+        function buildEventCardMarkup(e) {
             let adminButtons = '';
             if (isAdmin) {
                 adminButtons = `
@@ -630,14 +615,14 @@
             }
 
             return `
-                <div class="event-card ${isPast ? 'past-card' : ''}">
+                <div class="event-card">
                     <div class="card-body">
                         <div class="card-meta-row">
                             <div class="meta-left">
                                 <div class="thumb-wrapper">${thumbnailMarkup}</div>
                                 <div class="meta-details">
                                     <div class="badge-row">
-                                        <span class="badge-date ${isPast ? 'past-badge-date' : ''}">${dateLabel}</span>
+                                        <span class="badge-date">${dateLabel}</span>
                                         ${e.time ? `<span class="badge-info">⏰ ${e.time}</span>` : ''}
                                         ${e.location ? `<span class="badge-info">📍 ${e.location}</span>` : ''}
                                     </div>
@@ -655,24 +640,17 @@
 
         function renderEvents() {
             const upcomingList = document.getElementById('upcoming-events-list');
-            const pastList = document.getElementById('past-events-list');
             const filterBanner = document.getElementById('filter-status-area');
             const filterMsg = document.getElementById('filter-message');
             const upcomingWrapper = document.getElementById('upcoming-section-wrapper');
-            const pastWrapper = document.getElementById('past-section-wrapper');
 
-            if (!upcomingList || !pastList) return;
+            if (!upcomingList) return;
 
             let filteredEvents = [...globalEventsArray];
-            const todayMidnight = new Date('2026-06-04T00:00:00');
+            const todayMidnight = new Date('2026-06-05T00:00:00');
 
             if (activeDateFilter) {
-                upcomingWrapper.classList.remove('hidden');
-                pastWrapper.classList.remove('hidden');
-                
                 upcomingWrapper.querySelector('.section-label').innerText = "🔍 Isolated View (Upcoming Matches)";
-                pastWrapper.querySelector('.section-label').innerText = "🔍 Isolated View (Past Matches)";
-                
                 filterBanner.classList.remove('hidden');
                 const readableFilterDate = new Date(activeDateFilter + 'T00:00:00').toLocaleDateString('en-US', {
                     year: 'numeric', month: 'long', day: 'numeric'
@@ -684,18 +662,12 @@
                     return daysSpan.includes(activeDateFilter);
                 });
             } else {
-                upcomingWrapper.classList.remove('hidden');
-                pastWrapper.classList.remove('hidden');
                 upcomingWrapper.querySelector('.section-label').innerText = "📅 Upcoming Events & Activities";
-                pastWrapper.querySelector('.section-label').innerText = "📜 Past Event Archives";
                 filterBanner.classList.add('hidden');
             }
 
             upcomingList.innerHTML = '';
-            pastList.innerHTML = '';
-
             let upcomingEvents = [];
-            let pastEvents = [];
 
             filteredEvents.forEach(e => {
                 const terminalDateStr = e.endDate ? e.endDate : e.date;
@@ -703,24 +675,15 @@
                 
                 if (terminalDate >= todayMidnight) {
                     upcomingEvents.push(e);
-                } else {
-                    pastEvents.push(e);
                 }
             });
 
             upcomingEvents.sort((a, b) => new Date(a.date + 'T00:00:00') - new Date(b.date + 'T00:00:00'));
-            pastEvents.sort((a, b) => new Date(b.date + 'T00:00:00') - new Date(a.date + 'T00:00:00'));
 
             if (upcomingEvents.length === 0) {
                 upcomingList.innerHTML = `<div class="empty-state">No upcoming events found matching the selection criteria.</div>`;
             } else {
-                upcomingEvents.forEach(e => { upcomingList.innerHTML += buildEventCardMarkup(e, false); });
-            }
-
-            if (pastEvents.length === 0) {
-                pastList.innerHTML = `<div class="empty-state">No archived historical events match the current criteria.</div>`;
-            } else {
-                pastEvents.forEach(e => { pastList.innerHTML += buildEventCardMarkup(e, true); });
+                upcomingEvents.forEach(e => { upcomingList.innerHTML += buildEventCardMarkup(e); });
             }
         }
 
@@ -731,8 +694,12 @@
             
             const populatedDays = new Set();
             globalEventsArray.forEach(e => {
-                const spans = getDatesInRange(e.date, e.endDate);
-                spans.forEach(d => populatedDays.add(d));
+                // Ensure we only highlight calendar cells for current/upcoming events
+                const terminalDateStr = e.endDate ? e.endDate : e.date;
+                if (new Date(terminalDateStr + 'T00:00:00') >= new Date('2026-06-05T00:00:00')) {
+                    const spans = getDatesInRange(e.date, e.endDate);
+                    spans.forEach(d => populatedDays.add(d));
+                }
             });
 
             const m = activeDisplayMonth;

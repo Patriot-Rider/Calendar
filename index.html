@@ -275,7 +275,7 @@
             </div>
         </div>
 
-        <div style="margin-top: 1rem;">
+        <div id="events-display-anchor" style="margin-top: 1rem;">
             <div id="upcoming-section-wrapper">
                 <h2 class="section-label">📅 Upcoming Events & Activities</h2>
                 <div id="upcoming-events-list" class="events-container"></div>
@@ -429,7 +429,7 @@
             });
         }
 
-        // Helper function that processes data URIs cleanly into temporary window Blobs to fix cross-device viewing blocks
+        // Smart system app handling tool configuration
         function openAttachmentWindow(base64DataStr, explicitType) {
             try {
                 const splitData = base64DataStr.split(',');
@@ -445,9 +445,22 @@
                 
                 const fileBlob = new Blob([arrayBuffer], { type: mimeString });
                 const transientUrl = URL.createObjectURL(fileBlob);
-                window.open(transientUrl, '_blank');
+
+                // Check if file is a PDF to trigger program handling streams
+                if (mimeString.toLowerCase().includes('pdf')) {
+                    const trackingAnchor = document.createElement('a');
+                    trackingAnchor.href = transientUrl;
+                    trackingAnchor.target = '_blank';
+                    // Appends reference metadata to clear data layer pipeline channels for Acrobat
+                    trackingAnchor.type = 'application/pdf'; 
+                    document.body.appendChild(trackingAnchor);
+                    trackingAnchor.click();
+                    document.body.removeChild(trackingAnchor);
+                } else {
+                    // Images and basic layouts fall back immediately into optimized clean window frames
+                    window.open(transientUrl, '_blank');
+                }
             } catch (err) {
-                // Fallback direct execution if conversion hits safety exceptions
                 window.open(base64DataStr, '_blank');
             }
         }
@@ -564,6 +577,14 @@
                 activeDateFilter = isoString;
             }
             safelyRenderAll();
+
+            // Smooth scroll target to let the view jump perfectly to matching events card layout
+            if (activeDateFilter) {
+                const targetAnchorElement = document.getElementById('events-display-anchor');
+                if (targetAnchorElement) {
+                    targetAnchorElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
         }
 
         function clearDateFilter() {
@@ -603,7 +624,6 @@
                 e.attachments.forEach((file, index) => {
                     const fileLabel = file.name || `Attachment_${index + 1}`;
                     const targetContentType = file.contentType || 'application/pdf';
-                    // Converted to execute an operational blob parsing handler instance rather than plain data-attribute href anchors
                     downloadsMarkup += `<button onclick="openAttachmentWindow(\`${file.dataString}\`, \`${targetContentType}\`)" class="btn-view-doc">📄 Open ${fileLabel}</button>`;
                 });
                 downloadsMarkup += `</div></div>`;

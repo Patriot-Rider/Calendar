@@ -78,7 +78,7 @@
         .btn-edit:hover { background-color: #fef08a; }
         .btn-delete { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; font-size: 0.75rem; padding: 0.5rem 0.875rem; border-radius: 0.25rem; }
         .btn-delete:hover { background-color: #fca5a5; }
-        .btn-view-doc { background-color: #0f172a; color: #ffffff; font-size: 0.75rem; padding: 0.625rem 1rem; text-decoration: none; border-radius: 0.25rem; font-weight: 600; transition: background 0.15s; border: 1px solid transparent;}
+        .btn-view-doc { background-color: #0f172a; color: #ffffff; font-size: 0.75rem; padding: 0.625rem 1rem; text-decoration: none; border-radius: 0.25rem; font-weight: 600; transition: background 0.15s; border: 1px solid transparent; cursor: pointer;}
         .btn-view-doc:hover { background-color: #dc2626; }
 
         /* HEADER CALENDAR MODULE STYLING */
@@ -89,28 +89,25 @@
         .calendar-sub-title { font-size: 0.8rem; color: #64748b; font-weight: 500; margin-top: 0.125rem; }
         
         .year-scroll-controls { display: flex; align-items: center; gap: 0.5rem; background: #f1f5f9; padding: 0.25rem; border-radius: 0.375rem; }
-        .btn-scroll { background: #ffffff; border: 1px solid #cbd5e1; color: #0f172a; width: 2rem; height: 2rem; display: flex; align-items: center; justify-content: center; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; font-weight: bold; transition: all 0.15s; }
+        .btn-scroll { background: #ffffff; border: 1px solid #cbd5e1; color: #0f172a; width: 2rem; height: 2rem; display: flex; align-items: center; justify-content: center; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; font-weight: bold; transition: all 0.15s; user-select: none; }
         .btn-scroll:hover { background: #0f172a; color: #ffffff; border-color: #0f172a; }
-        .year-display-label { font-size: 0.95rem; font-weight: 700; color: #0f172a; min-width: 3.5rem; text-align: center; }
+        .year-display-label { font-size: 0.95rem; font-weight: 700; color: #0f172a; min-width: 7.5rem; text-align: center; }
 
-        .months-horizontal-scroll { display: grid; grid-template-columns: repeat(1, 1fr); gap: 1rem; margin-top: 1rem; }
-        @media (min-width: 640px) { .months-horizontal-scroll { grid-template-columns: repeat(2, 1fr); } }
-        @media (min-width: 1024px) { .months-horizontal-scroll { grid-template-columns: repeat(3, 1fr); } }
-        @media (min-width: 1280px) { .months-horizontal-scroll { grid-template-columns: repeat(4, 1fr); } }
+        .months-horizontal-scroll { display: block; margin-top: 1rem; max-width: 28rem; margin-left: auto; margin-right: auto; }
 
-        .month-block { background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.75rem; border-radius: 0.375rem; }
-        .month-name { font-size: 0.875rem; font-weight: 700; color: #0f172a; border-bottom: 2px solid #1d4ed8; padding-bottom: 0.25rem; margin-bottom: 0.5rem; text-align: center; letter-spacing: 0.025em; }
+        .month-block { background: #f8fafc; border: 1px solid #e2e8f0; padding: 1rem; border-radius: 0.375rem; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02); }
+        .month-name { font-size: 1.1rem; font-weight: 700; color: #0f172a; border-bottom: 2px solid #1d4ed8; padding-bottom: 0.375rem; margin-bottom: 0.75rem; text-align: center; letter-spacing: 0.025em; text-transform: uppercase; }
         
-        .days-header-row { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; margin-bottom: 0.25rem; }
-        .day-label { font-size: 0.65rem; font-weight: 700; color: #64748b; }
+        .days-header-row { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; margin-bottom: 0.5rem; }
+        .day-label { font-size: 0.75rem; font-weight: 700; color: #64748b; }
         
-        .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; row-gap: 0.25rem; }
-        .calendar-cell { font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0; color: #cbd5e1; user-select: none; }
-        .current-month-day { color: #334155; border-radius: 0.125rem; position: relative; }
+        .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; row-gap: 0.375rem; column-gap: 0.25rem; }
+        .calendar-cell { font-size: 0.85rem; font-weight: 600; padding: 0.5rem 0; color: #cbd5e1; user-select: none; }
+        .current-month-day { color: #334155; border-radius: 0.25rem; position: relative; }
         
         .has-event { background-color: #1d4ed8 !important; color: #ffffff !important; font-weight: 700; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; border-radius: 0.25rem; }
-        .has-event:hover { transform: scale(1.2); z-index: 10; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); background-color: #dc2626 !important; }
-        .has-event::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 3px; height: 3px; background-color: #ffffff; border-radius: 50%; }
+        .has-event:hover { transform: scale(1.15); z-index: 10; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); background-color: #dc2626 !important; }
+        .has-event::after { content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background-color: #ffffff; border-radius: 50%; }
         .selected-day { outline: 2px solid #dc2626; background-color: #dc2626 !important; color: #ffffff !important; }
 
         /* HOST DASHBOARD PANEL */
@@ -200,17 +197,17 @@
 
     <div class="max-container">
         
-        <!-- YEARLY CALENDAR AT THE TOP WITH SCROLLING CONTROLS -->
+        <!-- SINGLE MONTH CALENDAR CONTAINER WITH LEFT/RIGHT CONTROLS -->
         <div class="top-calendar-container">
             <div class="calendar-header-row">
                 <div class="calendar-title-wrapper">
-                    <span class="calendar-main-title">Yearly Event Schedule</span>
-                    <span class="calendar-sub-title">Select any highlighted date below to narrow down events</span>
+                    <span class="calendar-main-title">Event Schedule Calendar</span>
+                    <span class="calendar-sub-title">Select highlighted dates to view specific events</span>
                 </div>
                 <div class="year-scroll-controls">
-                    <button class="btn-scroll" onclick="scrollYear(-1)" title="Previous Year">◀</button>
-                    <span id="calendar-year-label" class="year-display-label">2026</span>
-                    <button class="btn-scroll" onclick="scrollYear(1)" title="Next Year">▶</button>
+                    <button class="btn-scroll" onclick="scrollMonth(-1)" title="Previous Month">◀</button>
+                    <span id="calendar-year-label" class="year-display-label">January 2026</span>
+                    <button class="btn-scroll" onclick="scrollMonth(1)" title="Next Month">▶</button>
                 </div>
             </div>
             <div id="matrix-months-container" class="months-horizontal-scroll"></div>
@@ -311,11 +308,14 @@
         const database = firebase.database();
         const dbRef = database.ref("events");
 
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
         let isAdmin = false;
         let cacheFlyers = [];
         let cacheThumb = null;
         let activeDateFilter = null; 
         let activeDisplayYear = 2026;
+        let activeDisplayMonth = 5; // June (0-indexed base)
         let globalEventsArray = [];
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -339,13 +339,24 @@
             } else {
                 activeDisplayYear = 2026;
             }
-            document.getElementById('calendar-year-label').innerText = activeDisplayYear;
+            updateMonthYearLabel();
         }
 
-        // Handles Left and Right Scrolling of years
-        function scrollYear(offset) {
-            activeDisplayYear += offset;
-            document.getElementById('calendar-year-label').innerText = activeDisplayYear;
+        function updateMonthYearLabel() {
+            document.getElementById('calendar-year-label').innerText = `${monthNames[activeDisplayMonth]} ${activeDisplayYear}`;
+        }
+
+        // Handles Left and Right Month Scrolling
+        function scrollMonth(offset) {
+            activeDisplayMonth += offset;
+            if (activeDisplayMonth > 11) {
+                activeDisplayMonth = 0;
+                activeDisplayYear += 1;
+            } else if (activeDisplayMonth < 0) {
+                activeDisplayMonth = 11;
+                activeDisplayYear -= 1;
+            }
+            updateMonthYearLabel();
             safelyRenderAll();
         }
 
@@ -410,12 +421,35 @@
                 reader.onloadend = () => {
                     resolve({
                         dataString: reader.result,
-                        isPdf: file.type === 'application/pdf',
+                        contentType: file.type || 'application/octet-stream',
                         name: file.name
                     });
                 };
                 reader.readAsDataURL(file);
             });
+        }
+
+        // Helper function that processes data URIs cleanly into temporary window Blobs to fix cross-device viewing blocks
+        function openAttachmentWindow(base64DataStr, explicitType) {
+            try {
+                const splitData = base64DataStr.split(',');
+                const byteStrings = atob(splitData[1]);
+                const mimeString = explicitType || splitData[0].split(':')[1].split(';')[0];
+                
+                const arrayBuffer = new ArrayBuffer(byteStrings.length);
+                const uint8Array = new Uint8Array(arrayBuffer);
+                
+                for (let i = 0; i < byteStrings.length; i++) {
+                    uint8Array[i] = byteStrings.charCodeAt(i);
+                }
+                
+                const fileBlob = new Blob([arrayBuffer], { type: mimeString });
+                const transientUrl = URL.createObjectURL(fileBlob);
+                window.open(transientUrl, '_blank');
+            } catch (err) {
+                // Fallback direct execution if conversion hits safety exceptions
+                window.open(base64DataStr, '_blank');
+            }
         }
 
         async function handleFormSubmit(e) {
@@ -568,8 +602,9 @@
                 `;
                 e.attachments.forEach((file, index) => {
                     const fileLabel = file.name || `Attachment_${index + 1}`;
-                    // Changed from download attribute to target="_blank" to open with viewing option
-                    downloadsMarkup += `<a href="${file.dataString}" target="_blank" class="btn-view-doc">📄 Open ${fileLabel}</a>`;
+                    const targetContentType = file.contentType || 'application/pdf';
+                    // Converted to execute an operational blob parsing handler instance rather than plain data-attribute href anchors
+                    downloadsMarkup += `<button onclick="openAttachmentWindow(\`${file.dataString}\`, \`${targetContentType}\`)" class="btn-view-doc">📄 Open ${fileLabel}</button>`;
                 });
                 downloadsMarkup += `</div></div>`;
             }
@@ -673,8 +708,6 @@
             const container = document.getElementById('matrix-months-container');
             if (!container) return;
             container.innerHTML = '';
-
-            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
             
             const populatedDays = new Set();
             globalEventsArray.forEach(e => {
@@ -682,51 +715,50 @@
                 spans.forEach(d => populatedDays.add(d));
             });
 
-            for (let m = 0; m < 12; m++) {
-                const firstDayObject = new Date(activeDisplayYear, m, 1);
-                const totalDaysInMonth = new Date(activeDisplayYear, m + 1, 0).getDate();
-                const startDayOffset = firstDayObject.getDay(); 
+            const m = activeDisplayMonth;
+            const firstDayObject = new Date(activeDisplayYear, m, 1);
+            const totalDaysInMonth = new Date(activeDisplayYear, m + 1, 0).getDate();
+            const startDayOffset = firstDayObject.getDay(); 
 
-                const block = document.createElement('div');
-                block.className = 'month-block';
+            const block = document.createElement('div');
+            block.className = 'month-block';
 
-                let html = `
-                    <div class="month-name">${monthNames[m]}</div>
-                    <div class="days-header-row">
-                        <div class="day-label">S</div><div class="day-label">M</div><div class="day-label">T</div>
-                        <div class="day-label">W</div><div class="day-label">T</div><div class="day-label">F</div>
-                        <div class="day-label">S</div>
-                    </div>
-                    <div class="days-grid">
-                `;
+            let html = `
+                <div class="month-name">${monthNames[m]}</div>
+                <div class="days-header-row">
+                    <div class="day-label">S</div><div class="day-label">M</div><div class="day-label">T</div>
+                    <div class="day-label">W</div><div class="day-label">T</div><div class="day-label">F</div>
+                    <div class="day-label">S</div>
+                </div>
+                <div class="days-grid">
+            `;
 
-                for (let i = 0; i < startDayOffset; i++) {
-                    html += `<div class="calendar-cell"></div>`;
-                }
-
-                for (let day = 1; day <= totalDaysInMonth; day++) {
-                    const isoMonthStr = String(m + 1).padStart(2, '0');
-                    const isoDayStr = String(day).padStart(2, '0');
-                    const currentIso = `${activeDisplayYear}-${isoMonthStr}-${isoDayStr}`;
-
-                    let customClass = 'calendar-cell current-month-day';
-                    let interactionAttr = '';
-
-                    if (populatedDays.has(currentIso)) {
-                        customClass += ' has-event';
-                        interactionAttr = `onclick="filterByDate('${currentIso}')"`;
-                    }
-                    if (activeDateFilter === currentIso) {
-                        customClass += ' selected-day';
-                    }
-
-                    html += `<div class="${customClass}" ${interactionAttr}>${day}</div>`;
-                }
-
-                html += `</div>`;
-                block.innerHTML = html;
-                container.appendChild(block);
+            for (let i = 0; i < startDayOffset; i++) {
+                html += `<div class="calendar-cell"></div>`;
             }
+
+            for (let day = 1; day <= totalDaysInMonth; day++) {
+                const isoMonthStr = String(m + 1).padStart(2, '0');
+                const isoDayStr = String(day).padStart(2, '0');
+                const currentIso = `${activeDisplayYear}-${isoMonthStr}-${isoDayStr}`;
+
+                let customClass = 'calendar-cell current-month-day';
+                let interactionAttr = '';
+
+                if (populatedDays.has(currentIso)) {
+                    customClass += ' has-event';
+                    interactionAttr = `onclick="filterByDate('${currentIso}')"`;
+                }
+                if (activeDateFilter === currentIso) {
+                    customClass += ' selected-day';
+                }
+
+                html += `<div class="${customClass}" ${interactionAttr}>${day}</div>`;
+            }
+
+            html += `</div>`;
+            block.innerHTML = html;
+            container.appendChild(block);
         }
     </script>
 </body>

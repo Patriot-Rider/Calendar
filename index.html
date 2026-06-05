@@ -181,6 +181,38 @@
         .filter-banner { background-color: #eff6ff; border: 1px solid #bfdbfe; padding: 0.75rem 1rem; border-radius: 0.375rem; margin-top: 1.5rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.875rem; color: #1e40af; font-weight: 600; }
         .btn-clear-filter { background: #1d4ed8; color: #ffffff; border: none; padding: 0.35rem 0.85rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
         .btn-clear-filter:hover { background: #1e40af; }
+
+        /* SMART APP INSTALL BANNER SYSTEM */
+        .install-banner {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 92%;
+            max-width: 480px;
+            background-color: rgba(255, 255, 255, 0.96);
+            border: 1px solid #cbd5e1;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.15), 0 8px 12px -6px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 99999;
+            padding: 0.85rem 1rem;
+            box-sizing: border-box;
+            animation: slideUpBanner 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideUpBanner {
+            from { bottom: -120px; opacity: 0; }
+            to { bottom: 20px; opacity: 1; }
+        }
+        .banner-content { display: flex; align-items: center; gap: 0.85rem; position: relative; }
+        .banner-logo { width: 3.5rem; height: 3.5rem; border-radius: 10px; object-fit: contain; background: #0f172a; padding: 2px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .banner-text { font-size: 0.85rem; color: #334155; flex: 1; line-height: 1.35; padding-right: 0.5rem; }
+        .banner-text strong { display: block; color: #0f172a; font-size: 0.95rem; margin-bottom: 3px; font-weight: 600; }
+        .banner-btn-action { background-color: #007aff; color: white; border: none; padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 600; border-radius: 20px; cursor: pointer; white-space: nowrap; transition: background 0.2s; }
+        .banner-btn-action:hover { background-color: #0063cc; }
+        .banner-btn-close { background: none; border: none; font-size: 1.1rem; color: #94a3b8; cursor: pointer; padding: 0.25rem; align-self: flex-start; margin-top: -4px; margin-right: -4px; }
+        .banner-btn-close:hover { color: #475569; }
     </style>
 </head>
 <body>
@@ -286,6 +318,18 @@
         
     </div>
 
+    <div id="install-banner" class="install-banner hidden">
+        <div class="banner-content">
+            <img src="PR Logo_2.jpg" alt="App Logo" class="banner-logo">
+            <div class="banner-text">
+                <strong id="banner-title">Install WI-1 Calendar</strong>
+                <span id="banner-instructions">Add this app to your home screen for quick access to schedules.</span>
+            </div>
+            <button id="banner-action-btn" class="banner-btn-action">Install</button>
+            <button class="banner-btn-close" onclick="closeInstallBanner()">✕</button>
+        </div>
+    </div>
+
     <script>
         // ==========================================
         // 🔒 FIREBASE INTEGRATION ENGINE
@@ -314,6 +358,7 @@
         let activeDisplayYear = 2026;
         let activeDisplayMonth = 5; // June (0-indexed base)
         let globalEventsArray = [];
+        let deferredPrompt;
 
         window.addEventListener('DOMContentLoaded', () => {
             // Restore persistent admin state if it was already authorized
@@ -337,7 +382,6 @@
                 const checkCrossEdit = localStorage.getItem('pr_edit_target_id');
                 if (checkCrossEdit && isAdmin) {
                     localStorage.removeItem('pr_edit_target_id'); // Clear token
-                    // Set calendar to display the month of that target event
                     const targetData = globalEventsArray.find(item => item.id === checkCrossEdit);
                     if (targetData) {
                         const targetDateObj = new Date(targetData.date + 'T00:00:00');
@@ -351,7 +395,57 @@
 
                 safelyRenderAll();
             });
+
+            // Handle Smart PWA Mobile Cross-Platform Setup Logic
+            initializeSmartInstallationEngine();
         });
+
+        function initializeSmartInstallationEngine() {
+            const banner = document.getElementById('install-banner');
+            const actionBtn = document.getElementById('banner-action-btn');
+            const instructionsText = document.getElementById('banner-instructions');
+
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+            const isDismissed = localStorage.getItem('app_install_prompt_dismissed');
+
+            if (!isStandalone && !isDismissed) {
+                const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                const isAndroid = /Android/.test(navigator.userAgent);
+
+                if (isIos) {
+                    // Custom instruction configuration tailored specifically to Safari on iOS
+                    instructionsText.innerHTML = "Tap the share button <img src=\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23007aff' stroke-width='2.5'><path d='M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13'/></svg>\" style='vertical-align: middle; margin: 0 2px;'> below, then select <strong>'Add to Home Screen'</strong>.";
+                    actionBtn.innerText = "Got It";
+                    actionBtn.addEventListener('click', closeInstallBanner);
+                    banner.classList.remove('hidden');
+                } else if (isAndroid) {
+                    // Custom trigger catch listening for standard Android Chrome install configurations
+                    window.addEventListener('beforeinstallprompt', (e) => {
+                        e.preventDefault();
+                        deferredPrompt = e;
+                        instructionsText.innerText = "Click install to add the calendar to your home screen instantly.";
+                        actionBtn.innerText = "Install";
+                        banner.classList.remove('hidden');
+                    });
+
+                    actionBtn.addEventListener('click', async () => {
+                        if (!deferredPrompt) return;
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        if (outcome === 'accepted') {
+                            console.log('App successfully installed by user');
+                        }
+                        deferredPrompt = null;
+                        banner.classList.add('hidden');
+                    });
+                }
+            }
+        }
+
+        function closeInstallBanner() {
+            document.getElementById('install-banner').classList.add('hidden');
+            localStorage.setItem('app_install_prompt_dismissed', 'true');
+        }
 
         function initializeYearTracker() {
             if (globalEventsArray.length > 0) {
@@ -497,7 +591,6 @@
                 finalThumbnail = processedThumb ? processedThumb.dataString : null;
             }
 
-            // Fallback strategy: check if user uploaded files. If empty, persist original attachments
             let finalFlyersList = [...cacheFlyers];
             if (filesInput.files.length > 0) {
                 finalFlyersList = []; 
@@ -610,6 +703,7 @@
             safelyRenderAll();
         }
 
+        // Bridge to send users directly to specific archive points
         function redirectToArchive(isoDate) {
             window.location.href = `past-events.html?date=${isoDate}`;
         }

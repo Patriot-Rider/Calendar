@@ -108,6 +108,12 @@
         .has-event { background-color: #1d4ed8 !important; color: #ffffff !important; font-weight: 700; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; border-radius: 0.25rem; }
         .has-event:hover { transform: scale(1.15); z-index: 10; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); background-color: #dc2626 !important; }
         .has-event::after { content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background-color: #ffffff; border-radius: 50%; }
+        
+        /* Distinct style for past events on calendar */
+        .has-past-event { background-color: #475569 !important; color: #ffffff !important; font-weight: 600; cursor: pointer; transition: transform 0.15s; border-radius: 0.25rem; }
+        .has-past-event:hover { transform: scale(1.15); z-index: 10; background-color: #334155 !important; }
+        .has-past-event::after { content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background-color: #cbd5e1; border-radius: 50%; }
+
         .selected-day { outline: 2px solid #dc2626; background-color: #dc2626 !important; color: #ffffff !important; }
 
         /* HOST DASHBOARD PANEL */
@@ -194,11 +200,12 @@
 
     <div class="max-container">
         
+        <!-- SINGLE MONTH CALENDAR CONTAINER -->
         <div class="top-calendar-container">
             <div class="calendar-header-row">
                 <div class="calendar-title-wrapper">
                     <span class="calendar-main-title">Event Schedule Calendar</span>
-                    <span class="calendar-sub-title">Select highlighted dates to view specific events</span>
+                    <span class="calendar-sub-title">Select highlighted dates to view events (Past dates click through to archive page)</span>
                 </div>
                 <div class="year-scroll-controls">
                     <button class="btn-scroll" onclick="scrollMonth(-1)" title="Previous Month">◀</button>
@@ -209,6 +216,7 @@
             <div id="matrix-months-container" class="months-horizontal-scroll"></div>
         </div>
 
+        <!-- MANAGER DASHBOARD -->
         <div id="host-panel" class="panel hidden">
             <div class="panel-header">
                 <h2 id="form-heading" class="panel-title">📝 Create New Event / Schedule <span class="badge-active">Ready</span></h2>
@@ -572,9 +580,9 @@
             }
         }
 
-        function clearDateFilter() {
-            activeDateFilter = null;
-            safelyRenderAll();
+        // Action when a historical date is clicked
+        function redirectToArchive() {
+            window.location.href = "past-events.html";
         }
 
         function buildEventCardMarkup(e) {
@@ -692,13 +700,19 @@
             if (!container) return;
             container.innerHTML = '';
             
-            const populatedDays = new Set();
+            const upcomingPopulatedDays = new Set();
+            const pastPopulatedDays = new Set();
+            const todayMidnight = new Date('2026-06-05T00:00:00');
+
             globalEventsArray.forEach(e => {
-                // Ensure we only highlight calendar cells for current/upcoming events
                 const terminalDateStr = e.endDate ? e.endDate : e.date;
-                if (new Date(terminalDateStr + 'T00:00:00') >= new Date('2026-06-05T00:00:00')) {
-                    const spans = getDatesInRange(e.date, e.endDate);
-                    spans.forEach(d => populatedDays.add(d));
+                const terminalDate = new Date(terminalDateStr + 'T00:00:00');
+                const spans = getDatesInRange(e.date, e.endDate);
+
+                if (terminalDate >= todayMidnight) {
+                    spans.forEach(d => upcomingPopulatedDays.add(d));
+                } else {
+                    spans.forEach(d => pastPopulatedDays.add(d));
                 }
             });
 
@@ -732,10 +746,15 @@
                 let customClass = 'calendar-cell current-month-day';
                 let interactionAttr = '';
 
-                if (populatedDays.has(currentIso)) {
+                // Logic check: Is it an upcoming event, a historical event, or blank?
+                if (upcomingPopulatedDays.has(currentIso)) {
                     customClass += ' has-event';
                     interactionAttr = `onclick="filterByDate('${currentIso}')"`;
+                } else if (pastPopulatedDays.has(currentIso)) {
+                    customClass += ' has-past-event';
+                    interactionAttr = `onclick="redirectToArchive()"`;
                 }
+
                 if (activeDateFilter === currentIso) {
                     customClass += ' selected-day';
                 }

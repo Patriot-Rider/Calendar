@@ -200,7 +200,6 @@
 
     <div class="max-container">
         
-        <!-- SINGLE MONTH CALENDAR CONTAINER -->
         <div class="top-calendar-container">
             <div class="calendar-header-row">
                 <div class="calendar-title-wrapper">
@@ -216,7 +215,6 @@
             <div id="matrix-months-container" class="months-horizontal-scroll"></div>
         </div>
 
-        <!-- MANAGER DASHBOARD -->
         <div id="host-panel" class="panel hidden">
             <div class="panel-header">
                 <h2 id="form-heading" class="panel-title">📝 Create New Event / Schedule <span class="badge-active">Ready</span></h2>
@@ -259,7 +257,7 @@
                 <div class="form-group span-2">
                     <label>Upload Information Attachments (Flyers/PDFs)</label>
                     <input type="file" id="flyer-input" accept="image/*,application/pdf" multiple>
-                    <div id="flyers-edit-banner" class="field-banner hidden">⚠️ This will overwrite previous attachments.</div>
+                    <div id="flyers-edit-banner" class="field-banner hidden">⚠️ Leave empty to preserve current attachments. Uploading new files will replace them.</div>
                 </div>
 
                 <div class="form-group span-4">
@@ -318,6 +316,14 @@
         let globalEventsArray = [];
 
         window.addEventListener('DOMContentLoaded', () => {
+            // Restore persistent admin state if it was already authorized
+            if (localStorage.getItem('pr_admin_auth') === 'true') {
+                isAdmin = true;
+                document.getElementById('host-panel').classList.remove('hidden');
+                document.getElementById('admin-toggle-btn').innerText = "Lock Control Panel";
+                document.getElementById('admin-toggle-btn').className = "btn btn-slate";
+            }
+
             dbRef.on('value', (snapshot) => {
                 const data = snapshot.val();
                 globalEventsArray = [];
@@ -326,7 +332,23 @@
                         globalEventsArray.push({ id: key, ...data[key] });
                     });
                 }
-                initializeYearTracker();
+                
+                // Check if we redirected here from the past archives to edit a completed event
+                const checkCrossEdit = localStorage.getItem('pr_edit_target_id');
+                if (checkCrossEdit && isAdmin) {
+                    localStorage.removeItem('pr_edit_target_id'); // Clear token
+                    // Set calendar to display the month of that target event
+                    const targetData = globalEventsArray.find(item => item.id === checkCrossEdit);
+                    if (targetData) {
+                        const targetDateObj = new Date(targetData.date + 'T00:00:00');
+                        activeDisplayYear = targetDateObj.getFullYear();
+                        activeDisplayMonth = targetDateObj.getMonth();
+                    }
+                    startEditEvent(checkCrossEdit);
+                } else {
+                    initializeYearTracker();
+                }
+
                 safelyRenderAll();
             });
         });
@@ -396,6 +418,7 @@
                 const challenge = prompt("Enter Administration Password:");
                 if (challenge === SECRET_HOST_PASSWORD) {
                     isAdmin = true;
+                    localStorage.setItem('pr_admin_auth', 'true');
                     document.getElementById('host-panel').classList.remove('hidden');
                     document.getElementById('admin-toggle-btn').innerText = "Lock Control Panel";
                     document.getElementById('admin-toggle-btn').className = "btn btn-slate";
@@ -404,6 +427,7 @@
                 }
             } else {
                 isAdmin = false;
+                localStorage.removeItem('pr_admin_auth');
                 document.getElementById('host-panel').classList.add('hidden');
                 cancelEditing();
                 document.getElementById('admin-toggle-btn').innerText = "Dashboard Access";
@@ -473,6 +497,7 @@
                 finalThumbnail = processedThumb ? processedThumb.dataString : null;
             }
 
+            // Fallback strategy: check if user uploaded files. If empty, persist original attachments
             let finalFlyersList = [...cacheFlyers];
             if (filesInput.files.length > 0) {
                 finalFlyersList = []; 
@@ -580,7 +605,11 @@
             }
         }
 
-        // Modified action to carry the targeted date over to past-events.html
+        function clearDateFilter() {
+            activeDateFilter = null;
+            safelyRenderAll();
+        }
+
         function redirectToArchive(isoDate) {
             window.location.href = `past-events.html?date=${isoDate}`;
         }

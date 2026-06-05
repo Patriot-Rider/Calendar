@@ -580,9 +580,9 @@
             }
         }
 
-        // Action when a historical date is clicked
-        function redirectToArchive() {
-            window.location.href = "past-events.html";
+        // Modified action to carry the targeted date over to past-events.html
+        function redirectToArchive(isoDate) {
+            window.location.href = `past-events.html?date=${isoDate}`;
         }
 
         function buildEventCardMarkup(e) {
@@ -746,13 +746,12 @@
                 let customClass = 'calendar-cell current-month-day';
                 let interactionAttr = '';
 
-                // Logic check: Is it an upcoming event, a historical event, or blank?
                 if (upcomingPopulatedDays.has(currentIso)) {
                     customClass += ' has-event';
                     interactionAttr = `onclick="filterByDate('${currentIso}')"`;
                 } else if (pastPopulatedDays.has(currentIso)) {
                     customClass += ' has-past-event';
-                    interactionAttr = `onclick="redirectToArchive()"`;
+                    interactionAttr = `onclick="redirectToArchive('${currentIso}')"`;
                 }
 
                 if (activeDateFilter === currentIso) {

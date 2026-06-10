@@ -57,9 +57,8 @@
         .section-label { font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-bottom: 1.25rem; margin-top: 2rem; border-left: 4px solid #475569; padding-left: 0.5rem; display: flex; justify-content: space-between; align-items: center; }
         .events-container { display: flex; flex-direction: column; gap: 1.25rem; }
         
-        .event-card { background-color: rgba(255, 255, 255, 0.98); border-radius: 0.375rem; border: 1px solid #e2e8f0; border-left: 5px solid #475569; padding: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; flex-direction: column; }
-        .card-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-        .meta-left { display: flex; align-items: center; gap: 1rem; }
+        .event-card { background-color: rgba(255, 255, 255, 0.98); border-radius: 0.375rem; border: 1px solid #e2e8f0; border-left: 5px solid #475569; padding: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; flex-direction: column; opacity: 0.85; }
+        .card-meta-row { display: flex; align-items: center; gap: 1rem; }
         .thumb-zoom { width: 3.5rem; height: 3.5rem; border-radius: 0.25rem; object-fit: cover; border: 1px solid #e2e8f0; }
         
         .meta-details { display: flex; flex-direction: column; gap: 0.25rem; }
@@ -67,20 +66,6 @@
         .event-title { font-size: 1.15rem; font-weight: 700; color: #334155; }
         .event-desc { font-size: 0.9rem; color: #475569; margin-top: 1rem; background-color: rgba(241, 245, 249, 0.6); padding: 0.75rem; border-radius: 0.25rem; white-space: pre-line; }
         
-        /* ADMIN CONTROLS */
-        .admin-row { display: flex; align-items: center; gap: 0.5rem; }
-        .btn-edit { background-color: #fef9c3; color: #854d0e; border: 1px solid #fef08a; font-size: 0.75rem; padding: 0.4rem 0.75rem; border-radius: 0.25rem; font-weight: bold; cursor: pointer; }
-        .btn-edit:hover { background-color: #fef08a; }
-        .btn-delete { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; font-size: 0.75rem; padding: 0.4rem 0.75rem; border-radius: 0.25rem; font-weight: bold; cursor: pointer; }
-        .btn-delete:hover { background-color: #fca5a5; }
-
-        /* ATTACHMENT MARGINS */
-        .download-section { margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #cbd5e1; }
-        .download-title { font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.025em; }
-        .download-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-        .btn-view-doc { background-color: #475569; color: #ffffff; font-size: 0.75rem; padding: 0.4rem 0.75rem; text-decoration: none; border-radius: 0.25rem; font-weight: 600; border: none; cursor: pointer; }
-        .btn-view-doc:hover { background-color: #334155; }
-
         .empty-state { text-align: center; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.375rem; color: #64748b; padding: 3rem 1rem; margin-top: 1rem; }
 
         /* PARAMETER BANNER */
@@ -129,21 +114,19 @@
 
         let pastEventsArray = [];
         let targetedDateParam = null;
-        let isAdmin = false;
 
         window.addEventListener('DOMContentLoaded', () => {
-            // Check if admin token is shared in localStorage
-            if (localStorage.getItem('pr_admin_auth') === 'true') {
-                isAdmin = true;
-            }
-
+            // Read target parameters out of the address URL
             const urlParameters = new URLSearchParams(window.location.search);
             targetedDateParam = urlParameters.get('date');
 
             dbRef.on('value', (snapshot) => {
                 const data = snapshot.val();
                 pastEventsArray = [];
-                const todayMidnight = new Date('2026-06-05T00:00:00');
+                
+                // Dynamic generation of current local midnight threshold
+                const todayMidnight = new Date();
+                todayMidnight.setHours(0, 0, 0, 0);
 
                 if (data) {
                     Object.keys(data).forEach(key => {
@@ -151,12 +134,14 @@
                         const terminalDateStr = item.endDate ? item.endDate : item.date;
                         const terminalDate = new Date(terminalDateStr + 'T00:00:00');
                         
+                        // Populate if it falls behind today's real-time timeline
                         if (terminalDate < todayMidnight) {
                             pastEventsArray.push({ id: key, ...item });
                         }
                     });
                 }
                 
+                // Sort backwards so the most recent historical events display first
                 pastEventsArray.sort((a, b) => new Date(b.date + 'T00:00:00') - new Date(a.date + 'T00:00:00'));
                 renderArchivedContent();
             });
@@ -179,39 +164,10 @@
         }
 
         function clearUrlFilter() {
+            // Clean out url strings and re-render
             window.history.replaceState({}, document.title, window.location.pathname);
             targetedDateParam = null;
             renderArchivedContent();
-        }
-
-        // Bridge to send past event data safely to index.html dashboard
-        function transferPastEdit(eventId) {
-            localStorage.setItem('pr_edit_target_id', eventId);
-            window.location.href = "index.html";
-        }
-
-        function deletePastEvent(id) {
-            if (confirm("Delete this past historical event from database permanently?")) {
-                database.ref("events/" + id).remove();
-            }
-        }
-
-        function openAttachmentWindow(base64DataStr, explicitType) {
-            try {
-                const splitData = base64DataStr.split(',');
-                const byteStrings = atob(splitData[1]);
-                const mimeString = explicitType || splitData[0].split(':')[1].split(';')[0];
-                const arrayBuffer = new ArrayBuffer(byteStrings.length);
-                const uint8Array = new Uint8Array(arrayBuffer);
-                for (let i = 0; i < byteStrings.length; i++) {
-                    uint8Array[i] = byteStrings.charCodeAt(i);
-                }
-                const fileBlob = new Blob([arrayBuffer], { type: mimeString });
-                const transientUrl = URL.createObjectURL(fileBlob);
-                window.open(transientUrl, '_blank');
-            } catch (err) {
-                window.open(base64DataStr, '_blank');
-            }
         }
 
         function renderArchivedContent() {
@@ -233,6 +189,7 @@
                 bannerText.innerText = `Showing historical event scheduled on: ${formattedLabel}`;
                 sectionHeader.innerText = `Isolated Selection Archive View`;
 
+                // Filter down to verify if target date matches the event's range span
                 workingArray = workingArray.filter(e => {
                     const durationSpan = getDatesInRange(e.date, e.endDate);
                     return durationSpan.includes(targetedDateParam);
@@ -256,47 +213,16 @@
 
                 const thumbMarkup = e.thumbnail ? `<img src="${e.thumbnail}" class="thumb-zoom" alt="Thumb">` : '🖼️';
 
-                // Render dynamic admin view row if cookie-token exists
-                let adminActionControls = '';
-                if (isAdmin) {
-                    adminActionControls = `
-                        <div class="admin-row">
-                            <button onclick="transferPastEdit('${e.id}')" class="btn-edit">Edit Past Event</button>
-                            <button onclick="deletePastEvent('${e.id}')" class="btn-delete">Delete</button>
-                        </div>
-                    `;
-                }
-
-                // Keep attachments visible for historic context view
-                let attachmentsMarkup = '';
-                if (e.attachments && e.attachments.length > 0) {
-                    attachmentsMarkup = `
-                        <div class="download-section">
-                            <div class="download-title">Archived Attachments & Flyers</div>
-                            <div class="download-grid">
-                    `;
-                    e.attachments.forEach((file, index) => {
-                        const label = file.name || `Attachment_${index + 1}`;
-                        const type = file.contentType || 'application/pdf';
-                        attachmentsMarkup += `<button onclick="openAttachmentWindow(\`${file.dataString}\`, \`${type}\`)" class="btn-view-doc">📄 View ${label}</button>`;
-                    });
-                    attachmentsMarkup += `</div></div>`;
-                }
-
                 const elementMarkup = `
                     <div class="event-card">
                         <div class="card-meta-row">
-                            <div class="meta-left">
-                                <div>${thumbMarkup}</div>
-                                <div class="meta-details">
-                                    <span class="badge-date">${formattedDate}</span>
-                                    <h3 class="event-title">${e.title}</h3>
-                                </div>
+                            <div>${thumbMarkup}</div>
+                            <div class="meta-details">
+                                <span class="badge-date">${formattedDate}</span>
+                                <h3 class="event-title">${e.title}</h3>
                             </div>
-                            ${adminActionControls}
                         </div>
                         ${e.description ? `<div class="event-desc">${e.description}</div>` : ''}
-                        ${attachmentsMarkup}
                     </div>
                 `;
                 displayList.innerHTML += elementMarkup;

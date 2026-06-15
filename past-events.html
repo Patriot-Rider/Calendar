@@ -9,116 +9,16 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        /* [Retain your existing style code here] */
         
-        body { 
-            background-color: #f8fafc; 
-            color: #0f172a; 
-            padding-bottom: 3rem; 
-            line-height: 1.5;
-            position: relative;
-            min-height: 100vh;
-        }
-
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background-image: url('PR Logo_2.jpg');
-            background-size: 45rem;
-            background-position: center center;
-            background-repeat: no-repeat;
-            opacity: 0.04;
-            pointer-events: none;
-        }
-
-        .max-container { max-width: 60rem; margin: 0 auto; padding: 0 1rem; }
-
-        nav { 
-            background-color: #0f172a; 
-            color: #ffffff; 
-            padding: 1rem 0; 
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-            border-bottom: 4px solid #dc2626;
-        }
-        .nav-container { display: flex; justify-content: space-between; align-items: center; max-width: 60rem; margin: 0 auto; padding: 0 1rem; }
-        .nav-branding { display: flex; align-items: center; gap: 0.75rem; }
-        .nav-logo { width: 2.25rem; height: 2.25rem; object-fit: contain; }
-        nav h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.025em; }
-
-        .nav-actions { display: flex; align-items: center; gap: 0.75rem; }
-
-        .btn { padding: 0.5rem 1rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 600; border: 1px solid transparent; cursor: pointer; transition: background 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; }
-        .btn-slate { background-color: #475569; color: #ffffff; border-color: #334155; }
-        .btn-slate:hover { background-color: #334155; }
-        .btn-lock { background-color: #dc2626; color: #ffffff; border-color: #b91c1c; }
-        .btn-lock:hover { background-color: #b91c1c; }
-        .btn-unlock { background-color: #16a34a; color: #ffffff; border-color: #15803d; }
-        .btn-unlock:hover { background-color: #15803d; }
-        
-        .btn-view-doc { background-color: #0f172a; color: #ffffff; font-size: 0.75rem; padding: 0.5rem 0.75rem; text-decoration: none; border-radius: 0.25rem 0 0 0.25rem; font-weight: 600; transition: background 0.15s; border: 1px solid transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem; }
-        .btn-view-doc:hover { background-color: #dc2626; }
-        .btn-download-doc { background-color: #1e293b; color: #ffffff; font-size: 0.75rem; padding: 0.5rem 0.75rem; text-decoration: none; border-radius: 0 0.375rem 0.375rem 0; font-weight: 600; transition: background 0.15s; border: 1px solid transparent; border-left: 1px solid #475569; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem; }
-        .btn-download-doc:hover { background-color: #16a34a; }
-
-        .header-block { margin-bottom: 1.5rem; }
-        .header-block h2 { font-size: 1.5rem; color: #0f172a; font-weight: 800; }
-        .header-block p { font-size: 0.9rem; color: #64748b; margin-top: 0.25rem; font-weight: 500; }
-
-        .filter-alert-banner { background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 0.75rem 1rem; border-radius: 0.375rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #334155; font-weight: 600; }
-        .btn-clear { background: #475569; color: #ffffff; border: none; padding: 0.25rem 0.75rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; font-weight: bold; }
-        .btn-clear:hover { background: #334155; }
-
-        .events-container { display: flex; flex-direction: column; gap: 1.25rem; }
-        .event-card { background-color: rgba(255, 255, 255, 0.96); border-radius: 0.375rem; border: 1px solid #e2e8f0; border-left: 5px solid #475569; padding: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; flex-direction: column; backdrop-filter: blur(4px); }
-        
-        .card-meta-row { display: flex; align-items: flex-start; gap: 1rem; }
-        .thumb-zoom { 
-            width: 4rem; height: 4rem; border-radius: 0.375rem; border: 1px solid #e2e8f0; 
-            object-fit: cover; background-color: #f8fafc; display: block;
-            transition: transform 0.2s ease-in-out; transform-origin: center center;
-        }
-        .thumb-zoom:hover { transform: scale(1.25); z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        
-        .meta-details { display: flex; flex-direction: column; gap: 0.25rem; flex-grow: 1; }
-        .badge-date { background-color: #475569; color: #ffffff; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.5rem; border-radius: 0.25rem; align-self: flex-start; }
-        .event-title { font-size: 1.2rem; font-weight: 700; color: #0f172a; margin-top: 0.125rem; }
-        
-        .event-desc { font-size: 0.9rem; color: #334155; margin-top: 1rem; background-color: rgba(248, 250, 252, 0.7); padding: 1rem; border-radius: 0.375rem; border: 1px solid #e2e8f0; border-left: 3px solid #475569; white-space: pre-line; }
-        
-        .download-section { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; }
-        .download-title { font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 0.625rem; letter-spacing: 0.025em; }
-        .download-grid { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
-        .attachment-btn-group { display: inline-flex; border-radius: 0.375rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        
-        .empty-state { text-align: center; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.375rem; color: #64748b; padding: 3rem 1rem; font-weight: 500; }
-
-        /* Administrative Panel Elements */
-        .admin-controls { margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #cbd5e1; display: none; justify-content: flex-end; gap: 0.5rem; }
-        .btn-admin { padding: 0.35rem 0.75rem; font-size: 0.75rem; border-radius: 0.25rem; font-weight: 600; cursor: pointer; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 0.25rem; }
-        .btn-edit { background-color: #f1f5f9; color: #334155; border-color: #cbd5e1; }
-        .btn-edit:hover { background-color: #e2e8f0; }
-        .btn-delete { background-color: #fef2f2; color: #991b1b; border-color: #fee2e2; }
-        .btn-delete:hover { background-color: #fee2e2; }
-        .btn-save { background-color: #16a34a; color: #ffffff; }
-        .btn-save:hover { background-color: #15803d; }
-        .btn-cancel { background-color: #64748b; color: #ffffff; }
-        .btn-cancel:hover { background-color: #475569; }
-
-        .edit-fields-box { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem; background: #fff; border: 1px solid #cbd5e1; padding: 1rem; border-radius: 0.375rem; }
-        .edit-row { display: flex; flex-direction: column; gap: 0.25rem; }
-        .edit-row label { font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; }
-        .edit-row input, .edit-row textarea { padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.25rem; font-size: 0.9rem; width: 100%; }
-        .edit-row-inline-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-        .hidden-editor { display: none !important; }
-        
-        /* Forces control visibility when authorized dashboard status is live */
-        body.dashboard-authenticated .admin-controls.authorized-row { display: flex !important; }
+        /* New utility styles for Admin controls inside Archives */
+        .admin-archive-bar { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #cbd5e1; }
+        .btn-edit { background-color: #fef9c3; color: #854d0e; border: 1px solid #fef08a; font-size: 0.75rem; padding: 0.5rem 0.875rem; border-radius: 0.25rem; font-weight: 600; cursor: pointer; text-decoration: none; }
+        .btn-edit:hover { background-color: #fef08a; }
+        .btn-delete { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; font-size: 0.75rem; padding: 0.5rem 0.875rem; border-radius: 0.25rem; font-weight: 600; cursor: pointer; }
+        .btn-delete:hover { background-color: #fca5a5; }
+        .badge-info { font-size: 0.75rem; color: #334155; font-weight: 600; background-color: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 0.25rem; border: 1px solid #e2e8f0; display: inline-block; margin-top: 0.25rem; }
+        .badge-row-metrics { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
     </style>
 </head>
 <body>
@@ -129,66 +29,54 @@
                 <img src="PR Logo_2.jpg" alt="Logo" class="nav-logo" onerror="this.style.display='none'">
                 <h1>Patriot Riders WI-1 Archives</h1>
             </div>
-            <div class="nav-actions">
-                <button id="dashboard-toggle-btn" class="btn btn-lock" onclick="toggleDashboardAccess()">🔒 Dashboard Access</button>
+            <div>
                 <a href="index.html" class="btn btn-slate">📅 Back To Live Calendar</a>
             </div>
         </div>
     </nav>
 
     <div class="max-container">
-        
         <div class="header-block">
             <h2>📜 Historical Archived Events</h2>
-            <p>Reviewing past rides, completed poker runs, and meeting configurations saved in database archives.</p>
+            <p>Review of past runs, poker distributions, and metrics reports.</p>
         </div>
 
         <div id="filter-banner" class="filter-alert-banner hidden">
-            <span id="filter-text">Isolated history mode</span>
-            <button onclick="clearQueryFilter()" class="btn-clear">Show All History</button>
+            <span id="filter-text-label">Filtering historical items...</span>
+            <button onclick="clearQueryFilter()" class="btn-clear">Clear Filter</button>
         </div>
 
-        <div id="archived-list-container" class="events-container">
-            <div class="empty-state">Syncing historical file archives...</div>
-        </div>
-
+        <div id="archive-display-list" class="events-container">
+            </div>
     </div>
 
     <script>
-        // ==========================================
-        // 🔒 FIREBASE ARCHIVE ENGINE
-        // ==========================================
+        // Set up real-time initialization configurations
         const firebaseConfig = {
-            apiKey: "AIzaSyCniExkOprcUUTtid1QzVUTNRm36E78Uso",
-            authDomain: "pr-wi-chapter-1-calendar.firebaseapp.com",
-            projectId: "pr-wi-chapter-1-calendar",
-            storageBucket: "pr-wi-chapter-1-calendar.firebasestorage.app",
-            messagingSenderId: "810452049591",
-            appId: "1:810452049591:web:eb62d74074928e6a443732"
+            databaseURL: "https://patriot-riders-wi1-default-rtdb.firebaseio.com"
         };
-
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
         let explicitUrlFilter = null;
-        let internalStateCache = []; 
-        let isDashboardAuthorized = false;
+        let isAdmin = false;
 
         window.addEventListener('DOMContentLoaded', () => {
+            // Read authentication token computed by Dashboard Access controller from the main interface page
+            isAdmin = localStorage.getItem('pr_admin_auth') === 'true';
+            
             const urlParameters = new URLSearchParams(window.location.search);
             explicitUrlFilter = urlParameters.get('date');
 
             database.ref("events").on('value', (snapshot) => {
                 const data = snapshot.val();
-                internalStateCache = [];
-                
+                let historicalArray = [];
                 if (data) {
                     Object.keys(data).forEach(key => {
-                        internalStateCache.push({ id: key, ...data[key] });
+                        historicalArray.push({ id: key, ...data[key] });
                     });
                 }
-                
-                processAndRenderArchive(internalStateCache);
+                processAndRenderArchive(historicalArray);
             });
         });
 
@@ -196,190 +84,45 @@
             explicitUrlFilter = null;
             window.history.replaceState({}, document.title, window.location.pathname);
             document.getElementById('filter-banner').classList.add('hidden');
-            processAndRenderArchive(internalStateCache);
-        }
-
-        // ==========================================
-        // 🔐 SECURITY / DASHBOARD TOGGLE ENGINE
-        // ==========================================
-        function toggleDashboardAccess() {
-            if (!isDashboardAuthorized) {
-                const securityToken = prompt("Enter administrative access key to reveal editing panel:");
-                if (securityToken === "Veteran123") { // Replace this with your preferred passcode
-                    isDashboardAuthorized = true;
-                    document.body.classList.add('dashboard-authenticated');
-                    const btn = document.getElementById('dashboard-toggle-btn');
-                    btn.innerText = "🔓 Lock Dashboard";
-                    btn.className = "btn btn-unlock";
-                } else if (securityToken !== null) {
-                    alert("Invalid administrative clearance credentials.");
+            
+            database.ref("events").once('value', (snapshot) => {
+                const data = snapshot.val();
+                let historicalArray = [];
+                if (data) {
+                    Object.keys(data).forEach(key => historicalArray.push({ id: key, ...data[key] }));
                 }
-            } else {
-                isDashboardAuthorized = false;
-                document.body.classList.remove('dashboard-authenticated');
-                const btn = document.getElementById('dashboard-toggle-btn');
-                btn.innerText = "🔒 Dashboard Access";
-                btn.className = "btn btn-lock";
-                
-                // Force any active inline text input fields to close out clean
-                processAndRenderArchive(internalStateCache);
+                processAndRenderArchive(historicalArray);
+            });
+        }
+
+        function deleteArchiveEvent(id) {
+            if (confirm("Permanently destroy this archive record entry from the database?")) {
+                database.ref("events/" + id).remove();
             }
         }
 
-        // ==========================================
-        // 🛠️ HISTORICAL INLINE ADMINISTRATIVE ENGINE
-        // ==========================================
-        function activateInlineCardEditor(eventDatabaseKey) {
-            document.getElementById(`display-body-${eventDatabaseKey}`).style.display = 'none';
-            document.getElementById(`editor-box-${eventDatabaseKey}`).classList.remove('hidden-editor');
-            document.getElementById(`action-row-read-${eventDatabaseKey}`).setAttribute('style', 'display: none !important');
-            document.getElementById(`action-row-write-${eventDatabaseKey}`).classList.remove('hidden-editor');
-        }
-
-        function closeInlineCardEditor(eventDatabaseKey) {
-            document.getElementById(`display-body-${eventDatabaseKey}`).style.display = 'block';
-            document.getElementById(`editor-box-${eventDatabaseKey}`).classList.add('hidden-editor');
-            document.getElementById(`action-row-read-${eventDatabaseKey}`).removeAttribute('style');
-            document.getElementById(`action-row-write-${eventDatabaseKey}`).classList.add('hidden-editor');
-        }
-
-        function commitHistoricalUpdateToDatabase(eventDatabaseKey) {
-            const freshTitle = document.getElementById(`input-title-${eventDatabaseKey}`).value.trim();
-            const freshStart = document.getElementById(`input-start-${eventDatabaseKey}`).value;
-            const freshEnd = document.getElementById(`input-end-${eventDatabaseKey}`).value;
-            const freshDesc = document.getElementById(`input-desc-${eventDatabaseKey}`).value.trim();
-
-            if (!freshTitle || !freshStart) {
-                alert("Event updates require a Title and an initial Start Date.");
-                return;
-            }
-
-            const updatePayload = {
-                title: freshTitle,
-                date: freshStart,
-                description: freshDesc
-            };
-
-            if (freshEnd) {
-                updatePayload.endDate = freshEnd;
-            } else {
-                database.ref(`events/${eventDatabaseKey}/endDate`).remove();
-            }
-
-            database.ref(`events/${eventDatabaseKey}`).update(updatePayload)
-                .then(() => {
-                    closeInlineCardEditor(eventDatabaseKey);
-                })
-                .catch(err => {
-                    alert("Error saving updates to history: " + err.message);
-                });
-        }
-
-        function purgeHistoricalRecord(eventDatabaseKey) {
-            if (confirm("Are you absolutely sure you want to permanently delete this historical record from the archives?")) {
-                database.ref(`events/${eventDatabaseKey}`).remove()
-                    .catch(err => {
-                        alert("Error purging historical document: " + err.message);
-                    });
-            }
-        }
-
-        function openAttachmentWindow(base64DataStr, explicitType) {
-            try {
-                const splitData = base64DataStr.split(',');
-                const byteStrings = atob(splitData[1]);
-                const mimeString = explicitType || splitData[0].split(':')[1].split(';')[0];
-                
-                const arrayBuffer = new ArrayBuffer(byteStrings.length);
-                const uint8Array = new Uint8Array(arrayBuffer);
-                
-                for (let i = 0; i < byteStrings.length; i++) {
-                    uint8Array[i] = byteStrings.charCodeAt(i);
-                }
-                
-                const fileBlob = new Blob([arrayBuffer], { type: mimeString });
-                const transientUrl = URL.createObjectURL(fileBlob);
-
-                if (mimeString.toLowerCase().includes('pdf')) {
-                    const trackingAnchor = document.createElement('a');
-                    trackingAnchor.href = transientUrl;
-                    trackingAnchor.target = '_blank';
-                    trackingAnchor.type = 'application/pdf'; 
-                    document.body.appendChild(trackingAnchor);
-                    trackingAnchor.click();
-                    document.body.removeChild(trackingAnchor);
-                } else {
-                    window.open(transientUrl, '_blank');
-                }
-            } catch (err) {
-                window.open(base64DataStr, '_blank');
-            }
-        }
-
-        // ==========================================
-        // 💾 ARCHIVE DIRECT DOWNLOAD HANDLER ENGINE
-        // ==========================================
-        function downloadAttachmentFile(base64DataStr, filename, explicitType) {
-            try {
-                const splitData = base64DataStr.split(',');
-                const byteStrings = atob(splitData[1]);
-                const mimeString = explicitType || splitData[0].split(':')[1].split(';')[0];
-                
-                const arrayBuffer = new ArrayBuffer(byteStrings.length);
-                const uint8Array = new Uint8Array(arrayBuffer);
-                
-                for (let i = 0; i < byteStrings.length; i++) {
-                    uint8Array[i] = byteStrings.charCodeAt(i);
-                }
-                
-                const fileBlob = new Blob([arrayBuffer], { type: mimeString });
-                const transientUrl = URL.createObjectURL(fileBlob);
-                
-                const downloadAnchor = document.createElement('a');
-                downloadAnchor.href = transientUrl;
-                downloadAnchor.download = filename || "attachment";
-                document.body.appendChild(downloadAnchor);
-                downloadAnchor.click();
-                document.body.removeChild(downloadAnchor);
-                
-                setTimeout(() => URL.revokeObjectURL(transientUrl), 250);
-            } catch (err) {
-                window.open(base64DataStr, '_blank');
-            }
-        }
-
-        function getDatesInRange(startDateStr, endDateStr) {
-            const dates = [];
-            if (!startDateStr) return dates;
-            let current = new Date(startDateStr + 'T00:00:00');
-            const endLimitStr = endDateStr ? endDateStr : startDateStr;
-            const finalEnd = new Date(endLimitStr + 'T00:00:00');
-            while (current <= finalEnd) {
-                const y = current.getFullYear();
-                const m = String(current.getMonth() + 1).padStart(2, '0');
-                const d = String(current.getDate()).padStart(2, '0');
-                dates.push(`${y}-${m}-${d}`);
-                current.setDate(current.getDate() + 1);
-            }
-            return dates;
+        function editArchiveEvent(id) {
+            // Signal main index calendar page to load this targeted layout model inside its control room panel
+            localStorage.setItem('pr_edit_target_id', id);
+            window.location.href = 'index.html';
         }
 
         function processAndRenderArchive(rawEvents) {
-            const displayList = document.getElementById('archived-list-container');
-            if (!displayList) return;
-
+            const displayList = document.getElementById('archive-display-list');
             const banner = document.getElementById('filter-banner');
-            const bannerTxt = document.getElementById('filter-text');
-
+            const bannerTxt = document.getElementById('filter-text-label');
+            
+            displayList.innerHTML = '';
+            
             const todayMidnight = new Date();
-            todayMidnight.setHours(0, 0, 0, 0);
+            todayMidnight.setHours(0,0,0,0);
 
             let workingArray = [];
 
             if (explicitUrlFilter) {
                 banner.classList.remove('hidden');
                 const parsedLabel = new Date(explicitUrlFilter + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-                bannerTxt.innerText = `Viewing historical calendar files matching target date: ${parsedLabel}`;
+                bannerTxt.innerText = `Viewing archives matching target date: ${parsedLabel}`;
                 
                 workingArray = rawEvents.filter(e => {
                     const spans = getDatesInRange(e.date, e.endDate);
@@ -394,94 +137,141 @@
                 });
             }
 
+            // Newest past events display layout orientation at the top first
             workingArray.sort((a, b) => new Date(b.date + 'T00:00:00') - new Date(a.date + 'T00:00:00'));
 
-            displayList.innerHTML = '';
-
             if (workingArray.length === 0) {
-                displayList.innerHTML = `<div class="empty-state">No archived event entries match this history request.</div>`;
+                displayList.innerHTML = `<div class="empty-state">No historical event archives available found matching selection parameters.</div>`;
                 return;
             }
 
             workingArray.forEach(e => {
-                let formattedDate = new Date(e.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                if (e.endDate) {
-                    const endLabel = new Date(e.endDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                    formattedDate += ` - ${endLabel}`;
+                let thumbMarkup = '🖼️';
+                if (e.thumbnail) {
+                    thumbMarkup = `<img src="${e.thumbnail}" class="thumb-zoom" alt="Thumbnail">`;
                 }
 
-                const thumbMarkup = e.thumbnail ? `<img src="${e.thumbnail}" class="thumb-zoom" alt="Thumb">` : '🖼️';
+                let formattedDate = new Date(e.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                if (e.endDate) {
+                    formattedDate += ` - ${new Date(e.endDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+                }
+
+                // Compile metrics badges
+                let metricsMarkup = '<div class="badge-row-metrics">';
+                if (e.time) metricsMarkup += `<span class="badge-info">⏰ ${e.time}</span> `;
+                if (e.location) metricsMarkup += `<span class="badge-info">📍 ${e.location}</span> `;
+                if (e.metricBikes) metricsMarkup += `<span class="badge-info" style="background-color: #f0fdf4; border-color: #bbf7d0;">🏍️ ${e.metricBikes} Vehicles</span> `;
+                if (e.metricRaised) metricsMarkup += `<span class="badge-info" style="background-color: #fefce8; border-color: #fef08a; color: #854d0e;">💰 Raised: ${e.metricRaised}</span> `;
+                if (e.metricFifty) metricsMarkup += `<span class="badge-info" style="background-color: #fef2f2; border-color: #fee2e2; color: #991b1b;">🎟️ 50/50: ${e.metricFifty}</span> `;
+                if (e.metricAttended) metricsMarkup += `<span class="badge-info" style="background-color: #eff6ff; border-color: #bfdbfe; color: #1e40af;">👥 Attended: ${e.metricAttended}</span> `;
+                metricsMarkup += '</div>';
 
                 let attachmentsMarkup = '';
                 if (e.attachments && e.attachments.length > 0) {
                     attachmentsMarkup = `
                         <div class="download-section">
-                            <div class="download-title">Archived Document Attachments</div>
+                            <div class="download-title">Archived Document Assets</div>
                             <div class="download-grid">
                     `;
-                    e.attachments.forEach((file, index) => {
-                        const fileLabel = file.name || `Flyer_Archive_${index + 1}`;
+                    e.attachments.forEach((file, idx) => {
+                        const fileLabel = file.name || `Attachment_${idx + 1}`;
                         const targetContentType = file.contentType || 'application/pdf';
-                        
                         attachmentsMarkup += `
                             <div class="attachment-btn-group">
-                                <button onclick="openAttachmentWindow(\`${file.dataString}\`, \`${targetContentType}\`)" class="btn-view-doc" title="View Flyer">👁️ View ${fileLabel}</button>
-                                <button onclick="downloadAttachmentFile(\`${file.dataString}\`, \`${fileLabel}\`, \`${targetContentType}\`)" class="btn-download-doc" title="Download File">📥 Save</button>
+                                <button onclick="openAttachmentWindow(\`${file.dataString}\`, \`${targetContentType}\`)" class="btn-view-doc">👁️ View ${fileLabel}</button>
+                                <button onclick="downloadAttachmentFile(\`${file.dataString}\`, \`${fileLabel}\`, \`${targetContentType}\`)" class="btn-download-doc">📥 Save</button>
                             </div>
                         `;
                     });
                     attachmentsMarkup += `</div></div>`;
                 }
 
-                const safeDescription = e.description || '';
+                // If admin is authenticated via the control room dashboard, build the modification layout tools bar
+                let adminBarMarkup = '';
+                if (isAdmin) {
+                    adminBarMarkup = `
+                        <div class="admin-archive-bar">
+                            <button onclick="editArchiveEvent('${e.id}')" class="btn-edit">✏️ Edit Event Details</button>
+                            <button onclick="deleteArchiveEvent('${e.id}')" class="btn-delete">🗑️ Delete Archive Record</button>
+                        </div>
+                    `;
+                }
 
                 const elementMarkup = `
-                    <div class="event-card" id="card-${e.id}">
-                        <div id="display-body-${e.id}">
-                            <div class="card-meta-row">
-                                <div>${thumbMarkup}</div>
-                                <div class="meta-details">
-                                    <span class="badge-date">${formattedDate}</span>
-                                    <h3 class="event-title">${e.title}</h3>
-                                </div>
-                            </div>
-                            ${e.description ? `<div class="event-desc">${e.description}</div>` : ''}
-                            ${attachmentsMarkup}
-                        </div>
-
-                        <div id="editor-box-${e.id}" class="edit-fields-box hidden-editor">
-                            <div class="edit-row">
-                                <label>Event Title</label>
-                                <input type="text" id="input-title-${e.id}" value="${e.title.replace(/"/g, '&quot;')}">
-                            </div>
-                            <div class="edit-row-inline-grid">
-                                <div class="edit-row">
-                                    <label>Start Date</label>
-                                    <input type="date" id="input-start-${e.id}" value="${e.date}">
-                                </div>
-                                <div class="edit-row">
-                                    <label>End Date (Optional)</label>
-                                    <input type="date" id="input-end-${e.id}" value="${e.endDate || ''}">
-                                </div>
-                            </div>
-                            <div class="edit-row">
-                                <label>Event Description</label>
-                                <textarea id="input-desc-${e.id}" rows="4">${safeDescription}</textarea>
+                    <div class="event-card">
+                        <div class="card-meta-row">
+                            <div>${thumbMarkup}</div>
+                            <div class="meta-details">
+                                <span class="badge-date">${formattedDate}</span>
+                                <h3 class="event-title">${e.title}</h3>
+                                ${metricsMarkup}
                             </div>
                         </div>
-
-                        <div class="admin-controls authorized-row" id="action-row-read-${e.id}">
-                            <button class="btn-admin btn-edit" onclick="activateInlineCardEditor('${e.id}')">✏️ Edit</button>
-                            <button class="btn-admin btn-delete" onclick="purgeHistoricalRecord('${e.id}')">🗑️ Delete</button>
-                        </div>
-                        <div class="admin-controls hidden-editor" id="action-row-write-${e.id}">
-                            <button class="btn-admin btn-save" onclick="commitHistoricalUpdateToDatabase('${e.id}')">💾 Save Changes</button>
-                            <button class="btn-admin btn-cancel" onclick="closeInlineCardEditor('${e.id}')">❌ Cancel</button>
-                        </div>
+                        ${e.description ? `<div class="event-desc">${e.description}</div>` : ''}
+                        ${attachmentsMarkup}
+                        ${adminBarMarkup}
                     </div>
                 `;
                 displayList.innerHTML += elementMarkup;
             });
+        }
+
+        function getDatesInRange(start, end) {
+            const dates = [];
+            if (!start) return dates;
+            let current = new Date(start + 'T00:00:00');
+            const endLimit = end ? new Date(end + 'T00:00:00') : current;
+            while (current <= endLimit) {
+                const y = current.getFullYear();
+                const m = String(current.getMonth() + 1).padStart(2, '0');
+                const d = String(current.getDate()).padStart(2, '0');
+                dates.push(`${y}-${m}-${d}`);
+                current.setDate(current.getDate() + 1);
+            }
+            return dates;
+        }
+
+        function openAttachmentWindow(base64DataStr, explicitType) {
+            try {
+                const splitData = base64DataStr.split(',');
+                const byteStrings = atob(splitData[1]);
+                const mimeString = explicitType || splitData[0].split(':')[1].split(';')[0];
+                const arrayBuffer = new ArrayBuffer(byteStrings.length);
+                const uint8Array = new Uint8Array(arrayBuffer);
+                for (let i = 0; i < byteStrings.length; i++) { uint8Array[i] = byteStrings.charCodeAt(i); }
+                const fileBlob = new Blob([arrayBuffer], { type: mimeString });
+                const transientUrl = URL.createObjectURL(fileBlob);
+                if (mimeString.toLowerCase().includes('pdf')) {
+                    const trackingAnchor = document.createElement('a');
+                    trackingAnchor.href = transientUrl;
+                    trackingAnchor.target = '_blank';
+                    document.body.appendChild(trackingAnchor);
+                    trackingAnchor.click();
+                    document.body.removeChild(trackingAnchor);
+                } else {
+                    window.open(transientUrl, '_blank');
+                }
+            } catch (err) { window.open(base64DataStr, '_blank'); }
+        }
+
+        function downloadAttachmentFile(base64DataStr, filename, explicitType) {
+            try {
+                const splitData = base64DataStr.split(',');
+                const byteStrings = atob(splitData[1]);
+                const mimeString = explicitType || splitData[0].split(':')[1].split(';')[0];
+                const arrayBuffer = new ArrayBuffer(byteStrings.length);
+                const uint8Array = new Uint8Array(arrayBuffer);
+                for (let i = 0; i < byteStrings.length; i++) { uint8Array[i] = byteStrings.charCodeAt(i); }
+                const fileBlob = new Blob([arrayBuffer], { type: mimeString });
+                const transientUrl = URL.createObjectURL(fileBlob);
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.href = transientUrl;
+                downloadAnchor.download = filename || "attachment";
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                document.body.removeChild(downloadAnchor);
+                setTimeout(() => URL.revokeObjectURL(transientUrl), 250);
+            } catch (err) { alert("Unable to handle automatic file download."); }
         }
     </script>
 </body>

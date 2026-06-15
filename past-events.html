@@ -51,9 +51,15 @@
         .nav-logo { width: 2.25rem; height: 2.25rem; object-fit: contain; }
         nav h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.025em; }
 
+        .nav-actions { display: flex; align-items: center; gap: 0.75rem; }
+
         .btn { padding: 0.5rem 1rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 600; border: 1px solid transparent; cursor: pointer; transition: background 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; }
         .btn-slate { background-color: #475569; color: #ffffff; border-color: #334155; }
         .btn-slate:hover { background-color: #334155; }
+        .btn-lock { background-color: #dc2626; color: #ffffff; border-color: #b91c1c; }
+        .btn-lock:hover { background-color: #b91c1c; }
+        .btn-unlock { background-color: #16a34a; color: #ffffff; border-color: #15803d; }
+        .btn-unlock:hover { background-color: #15803d; }
         
         .btn-view-doc { background-color: #0f172a; color: #ffffff; font-size: 0.75rem; padding: 0.5rem 0.75rem; text-decoration: none; border-radius: 0.25rem 0 0 0.25rem; font-weight: 600; transition: background 0.15s; border: 1px solid transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem; }
         .btn-view-doc:hover { background-color: #dc2626; }
@@ -92,8 +98,8 @@
         
         .empty-state { text-align: center; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.375rem; color: #64748b; padding: 3rem 1rem; font-weight: 500; }
 
-        /* Inline Administrative Editor Elements */
-        .admin-controls { margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #cbd5e1; display: flex; justify-content: flex-end; gap: 0.5rem; }
+        /* Administrative Panel Elements */
+        .admin-controls { margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #cbd5e1; display: none; justify-content: flex-end; gap: 0.5rem; }
         .btn-admin { padding: 0.35rem 0.75rem; font-size: 0.75rem; border-radius: 0.25rem; font-weight: 600; cursor: pointer; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 0.25rem; }
         .btn-edit { background-color: #f1f5f9; color: #334155; border-color: #cbd5e1; }
         .btn-edit:hover { background-color: #e2e8f0; }
@@ -110,6 +116,9 @@
         .edit-row input, .edit-row textarea { padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.25rem; font-size: 0.9rem; width: 100%; }
         .edit-row-inline-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
         .hidden-editor { display: none !important; }
+        
+        /* Forces control visibility when authorized dashboard status is live */
+        body.dashboard-authenticated .admin-controls.authorized-row { display: flex !important; }
     </style>
 </head>
 <body>
@@ -120,7 +129,8 @@
                 <img src="PR Logo_2.jpg" alt="Logo" class="nav-logo" onerror="this.style.display='none'">
                 <h1>Patriot Riders WI-1 Archives</h1>
             </div>
-            <div>
+            <div class="nav-actions">
+                <button id="dashboard-toggle-btn" class="btn btn-lock" onclick="toggleDashboardAccess()">🔒 Dashboard Access</button>
                 <a href="index.html" class="btn btn-slate">📅 Back To Live Calendar</a>
             </div>
         </div>
@@ -161,7 +171,8 @@
         const database = firebase.database();
 
         let explicitUrlFilter = null;
-        let internalStateCache = []; // Caches historical snapshots to simplify live inline edits
+        let internalStateCache = []; 
+        let isDashboardAuthorized = false;
 
         window.addEventListener('DOMContentLoaded', () => {
             const urlParameters = new URLSearchParams(window.location.search);
@@ -189,19 +200,46 @@
         }
 
         // ==========================================
+        // 🔐 SECURITY / DASHBOARD TOGGLE ENGINE
+        // ==========================================
+        function toggleDashboardAccess() {
+            if (!isDashboardAuthorized) {
+                const securityToken = prompt("Enter administrative access key to reveal editing panel:");
+                if (securityToken === "Veteran123") { // Replace this with your preferred passcode
+                    isDashboardAuthorized = true;
+                    document.body.classList.add('dashboard-authenticated');
+                    const btn = document.getElementById('dashboard-toggle-btn');
+                    btn.innerText = "🔓 Lock Dashboard";
+                    btn.className = "btn btn-unlock";
+                } else if (securityToken !== null) {
+                    alert("Invalid administrative clearance credentials.");
+                }
+            } else {
+                isDashboardAuthorized = false;
+                document.body.classList.remove('dashboard-authenticated');
+                const btn = document.getElementById('dashboard-toggle-btn');
+                btn.innerText = "🔒 Dashboard Access";
+                btn.className = "btn btn-lock";
+                
+                // Force any active inline text input fields to close out clean
+                processAndRenderArchive(internalStateCache);
+            }
+        }
+
+        // ==========================================
         // 🛠️ HISTORICAL INLINE ADMINISTRATIVE ENGINE
         // ==========================================
         function activateInlineCardEditor(eventDatabaseKey) {
             document.getElementById(`display-body-${eventDatabaseKey}`).style.display = 'none';
             document.getElementById(`editor-box-${eventDatabaseKey}`).classList.remove('hidden-editor');
-            document.getElementById(`action-row-read-${eventDatabaseKey}`).style.display = 'none';
+            document.getElementById(`action-row-read-${eventDatabaseKey}`).setAttribute('style', 'display: none !important');
             document.getElementById(`action-row-write-${eventDatabaseKey}`).classList.remove('hidden-editor');
         }
 
         function closeInlineCardEditor(eventDatabaseKey) {
             document.getElementById(`display-body-${eventDatabaseKey}`).style.display = 'block';
             document.getElementById(`editor-box-${eventDatabaseKey}`).classList.add('hidden-editor');
-            document.getElementById(`action-row-read-${eventDatabaseKey}`).style.display = 'flex';
+            document.getElementById(`action-row-read-${eventDatabaseKey}`).removeAttribute('style');
             document.getElementById(`action-row-write-${eventDatabaseKey}`).classList.add('hidden-editor');
         }
 
@@ -349,7 +387,6 @@
                 });
             } else {
                 banner.classList.add('hidden');
-                // General archive mode -> filter only events whose terminal date has completely elapsed
                 workingArray = rawEvents.filter(e => {
                     const terminalDateStr = e.endDate ? e.endDate : e.date;
                     const terminalDate = new Date(terminalDateStr + 'T00:00:00');
@@ -357,7 +394,6 @@
                 });
             }
 
-            // Sort history backwards (Newest past events at the top)
             workingArray.sort((a, b) => new Date(b.date + 'T00:00:00') - new Date(a.date + 'T00:00:00'));
 
             displayList.innerHTML = '';
@@ -434,7 +470,7 @@
                             </div>
                         </div>
 
-                        <div class="admin-controls" id="action-row-read-${e.id}">
+                        <div class="admin-controls authorized-row" id="action-row-read-${e.id}">
                             <button class="btn-admin btn-edit" onclick="activateInlineCardEditor('${e.id}')">✏️ Edit</button>
                             <button class="btn-admin btn-delete" onclick="purgeHistoricalRecord('${e.id}')">🗑️ Delete</button>
                         </div>

@@ -79,7 +79,7 @@
         }
         .thumb-zoom:hover { transform: scale(1.25); z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
-        .meta-details { display: flex; flex-direction: column; gap: 0.25rem; }
+        .meta-details { display: flex; flex-direction: column; gap: 0.25rem; flex-grow: 1; }
         .badge-date { background-color: #475569; color: #ffffff; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.5rem; border-radius: 0.25rem; align-self: flex-start; }
         .event-title { font-size: 1.2rem; font-weight: 700; color: #0f172a; margin-top: 0.125rem; }
         
@@ -91,6 +91,25 @@
         .attachment-btn-group { display: inline-flex; border-radius: 0.375rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         
         .empty-state { text-align: center; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.375rem; color: #64748b; padding: 3rem 1rem; font-weight: 500; }
+
+        /* Inline Administrative Editor Elements */
+        .admin-controls { margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed #cbd5e1; display: flex; justify-content: flex-end; gap: 0.5rem; }
+        .btn-admin { padding: 0.35rem 0.75rem; font-size: 0.75rem; border-radius: 0.25rem; font-weight: 600; cursor: pointer; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 0.25rem; }
+        .btn-edit { background-color: #f1f5f9; color: #334155; border-color: #cbd5e1; }
+        .btn-edit:hover { background-color: #e2e8f0; }
+        .btn-delete { background-color: #fef2f2; color: #991b1b; border-color: #fee2e2; }
+        .btn-delete:hover { background-color: #fee2e2; }
+        .btn-save { background-color: #16a34a; color: #ffffff; }
+        .btn-save:hover { background-color: #15803d; }
+        .btn-cancel { background-color: #64748b; color: #ffffff; }
+        .btn-cancel:hover { background-color: #475569; }
+
+        .edit-fields-box { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem; background: #fff; border: 1px solid #cbd5e1; padding: 1rem; border-radius: 0.375rem; }
+        .edit-row { display: flex; flex-direction: column; gap: 0.25rem; }
+        .edit-row label { font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; }
+        .edit-row input, .edit-row textarea { padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.25rem; font-size: 0.9rem; width: 100%; }
+        .edit-row-inline-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+        .hidden-editor { display: none !important; }
     </style>
 </head>
 <body>
@@ -142,6 +161,7 @@
         const database = firebase.database();
 
         let explicitUrlFilter = null;
+        let internalStateCache = []; // Caches historical snapshots to simplify live inline edits
 
         window.addEventListener('DOMContentLoaded', () => {
             const urlParameters = new URLSearchParams(window.location.search);
@@ -149,15 +169,15 @@
 
             database.ref("events").on('value', (snapshot) => {
                 const data = snapshot.val();
-                let historicalArray = [];
+                internalStateCache = [];
                 
                 if (data) {
                     Object.keys(data).forEach(key => {
-                        historicalArray.push({ id: key, ...data[key] });
+                        internalStateCache.push({ id: key, ...data[key] });
                     });
                 }
                 
-                processAndRenderArchive(historicalArray);
+                processAndRenderArchive(internalStateCache);
             });
         });
 
@@ -165,16 +185,65 @@
             explicitUrlFilter = null;
             window.history.replaceState({}, document.title, window.location.pathname);
             document.getElementById('filter-banner').classList.add('hidden');
-            
-            // Re-fetch raw snapshot data to instantly refresh visual lists without reloading page
-            database.ref("events").once('value', (snapshot) => {
-                const data = snapshot.val();
-                let historicalArray = [];
-                if (data) {
-                    Object.keys(data).forEach(key => historicalArray.push({ id: key, ...data[key] }));
-                }
-                processAndRenderArchive(historicalArray);
-            });
+            processAndRenderArchive(internalStateCache);
+        }
+
+        // ==========================================
+        // 🛠️ HISTORICAL INLINE ADMINISTRATIVE ENGINE
+        // ==========================================
+        function activateInlineCardEditor(eventDatabaseKey) {
+            document.getElementById(`display-body-${eventDatabaseKey}`).style.display = 'none';
+            document.getElementById(`editor-box-${eventDatabaseKey}`).classList.remove('hidden-editor');
+            document.getElementById(`action-row-read-${eventDatabaseKey}`).style.display = 'none';
+            document.getElementById(`action-row-write-${eventDatabaseKey}`).classList.remove('hidden-editor');
+        }
+
+        function closeInlineCardEditor(eventDatabaseKey) {
+            document.getElementById(`display-body-${eventDatabaseKey}`).style.display = 'block';
+            document.getElementById(`editor-box-${eventDatabaseKey}`).classList.add('hidden-editor');
+            document.getElementById(`action-row-read-${eventDatabaseKey}`).style.display = 'flex';
+            document.getElementById(`action-row-write-${eventDatabaseKey}`).classList.add('hidden-editor');
+        }
+
+        function commitHistoricalUpdateToDatabase(eventDatabaseKey) {
+            const freshTitle = document.getElementById(`input-title-${eventDatabaseKey}`).value.trim();
+            const freshStart = document.getElementById(`input-start-${eventDatabaseKey}`).value;
+            const freshEnd = document.getElementById(`input-end-${eventDatabaseKey}`).value;
+            const freshDesc = document.getElementById(`input-desc-${eventDatabaseKey}`).value.trim();
+
+            if (!freshTitle || !freshStart) {
+                alert("Event updates require a Title and an initial Start Date.");
+                return;
+            }
+
+            const updatePayload = {
+                title: freshTitle,
+                date: freshStart,
+                description: freshDesc
+            };
+
+            if (freshEnd) {
+                updatePayload.endDate = freshEnd;
+            } else {
+                database.ref(`events/${eventDatabaseKey}/endDate`).remove();
+            }
+
+            database.ref(`events/${eventDatabaseKey}`).update(updatePayload)
+                .then(() => {
+                    closeInlineCardEditor(eventDatabaseKey);
+                })
+                .catch(err => {
+                    alert("Error saving updates to history: " + err.message);
+                });
+        }
+
+        function purgeHistoricalRecord(eventDatabaseKey) {
+            if (confirm("Are you absolutely sure you want to permanently delete this historical record from the archives?")) {
+                database.ref(`events/${eventDatabaseKey}`).remove()
+                    .catch(err => {
+                        alert("Error purging historical document: " + err.message);
+                    });
+            }
         }
 
         function openAttachmentWindow(base64DataStr, explicitType) {
@@ -328,17 +397,51 @@
                     attachmentsMarkup += `</div></div>`;
                 }
 
+                const safeDescription = e.description || '';
+
                 const elementMarkup = `
-                    <div class="event-card">
-                        <div class="card-meta-row">
-                            <div>${thumbMarkup}</div>
-                            <div class="meta-details">
-                                <span class="badge-date">${formattedDate}</span>
-                                <h3 class="event-title">${e.title}</h3>
+                    <div class="event-card" id="card-${e.id}">
+                        <div id="display-body-${e.id}">
+                            <div class="card-meta-row">
+                                <div>${thumbMarkup}</div>
+                                <div class="meta-details">
+                                    <span class="badge-date">${formattedDate}</span>
+                                    <h3 class="event-title">${e.title}</h3>
+                                </div>
+                            </div>
+                            ${e.description ? `<div class="event-desc">${e.description}</div>` : ''}
+                            ${attachmentsMarkup}
+                        </div>
+
+                        <div id="editor-box-${e.id}" class="edit-fields-box hidden-editor">
+                            <div class="edit-row">
+                                <label>Event Title</label>
+                                <input type="text" id="input-title-${e.id}" value="${e.title.replace(/"/g, '&quot;')}">
+                            </div>
+                            <div class="edit-row-inline-grid">
+                                <div class="edit-row">
+                                    <label>Start Date</label>
+                                    <input type="date" id="input-start-${e.id}" value="${e.date}">
+                                </div>
+                                <div class="edit-row">
+                                    <label>End Date (Optional)</label>
+                                    <input type="date" id="input-end-${e.id}" value="${e.endDate || ''}">
+                                </div>
+                            </div>
+                            <div class="edit-row">
+                                <label>Event Description</label>
+                                <textarea id="input-desc-${e.id}" rows="4">${safeDescription}</textarea>
                             </div>
                         </div>
-                        ${e.description ? `<div class="event-desc">${e.description}</div>` : ''}
-                        ${attachmentsMarkup}
+
+                        <div class="admin-controls" id="action-row-read-${e.id}">
+                            <button class="btn-admin btn-edit" onclick="activateInlineCardEditor('${e.id}')">✏️ Edit</button>
+                            <button class="btn-admin btn-delete" onclick="purgeHistoricalRecord('${e.id}')">🗑️ Delete</button>
+                        </div>
+                        <div class="admin-controls hidden-editor" id="action-row-write-${e.id}">
+                            <button class="btn-admin btn-save" onclick="commitHistoricalUpdateToDatabase('${e.id}')">💾 Save Changes</button>
+                            <button class="btn-admin btn-cancel" onclick="closeInlineCardEditor('${e.id}')">❌ Cancel</button>
+                        </div>
                     </div>
                 `;
                 displayList.innerHTML += elementMarkup;

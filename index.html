@@ -280,6 +280,23 @@
                     <label>Location / Venue</label>
                     <input type="text" id="location" placeholder="e.g., Eden, WI">
                 </div>
+
+                <div class="form-group span-1">
+                    <label>Number of Bikes/Vehicles</label>
+                    <input type="text" id="metric-bikes" placeholder="e.g., 145">
+                </div>
+                <div class="form-group span-1">
+                    <label>Total Amount Raised</label>
+                    <input type="text" id="metric-raised" placeholder="e.g., $4,250">
+                </div>
+                <div class="form-group span-1">
+                    <label>50/50 Amount</label>
+                    <input type="text" id="metric-fifty" placeholder="e.g., $820">
+                </div>
+                <div class="form-group span-1">
+                    <label>Number of People Attended</label>
+                    <input type="text" id="metric-attended" placeholder="e.g., 210">
+                </div>
                 
                 <div class="form-group span-2">
                     <label>Card Thumbnail Icon (Optional)</label>
@@ -576,9 +593,6 @@
             }
         }
 
-        // ==========================================
-        // 💾 DIRECT DOWNLOAD HANDLER ENGINE
-        // ==========================================
         function downloadAttachmentFile(base64DataStr, filename, explicitType) {
             try {
                 const splitData = base64DataStr.split(',');
@@ -602,7 +616,6 @@
                 downloadAnchor.click();
                 document.body.removeChild(downloadAnchor);
                 
-                // Delay memory cleanup safely
                 setTimeout(() => URL.revokeObjectURL(transientUrl), 250);
             } catch (err) {
                 alert("Unable to process file download automatically. Trying to open layout window instead.");
@@ -644,7 +657,12 @@
                 location: document.getElementById('location').value,
                 description: document.getElementById('description').value,
                 thumbnail: finalThumbnail,
-                attachments: finalFlyersList
+                attachments: finalFlyersList,
+                // New fields added to payload database object
+                metricBikes: document.getElementById('metric-bikes').value || '',
+                metricRaised: document.getElementById('metric-raised').value || '',
+                metricFifty: document.getElementById('metric-fifty').value || '',
+                metricAttended: document.getElementById('metric-attended').value || ''
             };
 
             if (eventIdInput) {
@@ -670,6 +688,12 @@
             document.getElementById('time').value = event.time;
             document.getElementById('location').value = event.location;
             document.getElementById('description').value = event.description;
+            
+            // Populate metrics fields when editing an event
+            document.getElementById('metric-bikes').value = event.metricBikes || '';
+            document.getElementById('metric-raised').value = event.metricRaised || '';
+            document.getElementById('metric-fifty').value = event.metricFifty || '';
+            document.getElementById('metric-attended').value = event.metricAttended || '';
 
             cacheThumb = event.thumbnail || null;
             cacheFlyers = event.attachments || [];
@@ -696,6 +720,13 @@
             document.getElementById('event-form').reset();
             document.getElementById('edit-event-id').value = "";
             document.getElementById('thumb-preview-box').innerHTML = '🖼️';
+            
+            // Clear new fields on form reset
+            document.getElementById('metric-bikes').value = "";
+            document.getElementById('metric-raised').value = "";
+            document.getElementById('metric-fifty').value = "";
+            document.getElementById('metric-attended').value = "";
+
             cacheThumb = null;
             cacheFlyers = [];
 
@@ -783,6 +814,13 @@
                 downloadsMarkup += `</div></div>`;
             }
 
+            // Dynamically append metrics layout labels into card design if present
+            let optionalMetricsBadges = '';
+            if (e.metricBikes) optionalMetricsBadges += `<span class="badge-info" style="background-color: #f0fdf4; border-color: #bbf7d0;">🏍️ ${e.metricBikes} Vehicles</span>`;
+            if (e.metricRaised) optionalMetricsBadges += `<span class="badge-info" style="background-color: #fefce8; border-color: #fef08a; color: #854d0e;">💰 Raised: ${e.metricRaised}</span>`;
+            if (e.metricFifty) optionalMetricsBadges += `<span class="badge-info" style="background-color: #fef2f2; border-color: #fee2e2; color: #991b1b;">🎟️ 50/50: ${e.metricFifty}</span>`;
+            if (e.metricAttended) optionalMetricsBadges += `<span class="badge-info" style="background-color: #eff6ff; border-color: #bfdbfe; color: #1e40af;">👥 Attended: ${e.metricAttended}</span>`;
+
             return `
                 <div class="event-card">
                     <div class="card-body">
@@ -794,6 +832,7 @@
                                         <span class="badge-date">${dateLabel}</span>
                                         ${e.time ? `<span class="badge-info">⏰ ${e.time}</span>` : ''}
                                         ${e.location ? `<span class="badge-info">📍 ${e.location}</span>` : ''}
+                                        ${optionalMetricsBadges}
                                     </div>
                                     <h3 class="event-title">${e.title}</h3>
                                 </div>
